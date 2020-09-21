@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="ClarabridgeChat_imageDisplayHeight">162dp</dimen>
+    <dimen name="ClarabridgeChat_imageDisplayWidth">309dp</dimen>
+    <dimen name="ClarabridgeChat_messageMaxSize">285dp</dimen>
+    <dimen name="ClarabridgeChat_fileNameMaxWidth">222dp</dimen>
+</resources>

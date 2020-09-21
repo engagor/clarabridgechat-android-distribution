@@ -1,0 +1,11 @@
+<resources>
+    <string name="ClarabridgeChat_activityConversation">Viestit</string>
+    <string name="ClarabridgeChat_startOfConversation">Tästä voit aloittaa keskustelun %1$s tiimin kanssa. Olemme sinuun yhteydessä saadaksesi kaiken irti sovelluksestasi.</string>
+    <string name="ClarabridgeChat_welcome">Jätä meille viesti jos jokin asia vaivaa mieltäsi. Vastaamme kysymyksiisi, ehdotuksiisi ja muihin asioihisi heti kun voimme.</string>
+    <string name="ClarabridgeChat_messageHint">Kirjoita viesti&#8230;</string>
+    <string name="ClarabridgeChat_btnSend">Lähetä</string>
+    <string name="ClarabridgeChat_errorSendingMessage">Viestiä ei voitu lähettää. Kosketa yrittääksesi uudelleen.</string>
+    <string name="ClarabridgeChat_errorCouldNotConnect">Palvelimeen ei voitu yhdistää.</string>
+    <string name="ClarabridgeChat_errorUserOffline">Ei Internet yhteyttä.</string>
+</resources>
+

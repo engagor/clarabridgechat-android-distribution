@@ -1,0 +1,18 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+          package="com.clarabridge.core">
+
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+    <uses-permission android:name="android.permission.INTERNET"/>
+
+    <application>
+        <service
+            android:name="com.clarabridge.core.service.ClarabridgeChatService"
+            android:exported="false"/>
+        <service android:name="com.clarabridge.core.FcmService">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT"/>
+            </intent-filter>
+        </service>
+    </application>
+</manifest>
+

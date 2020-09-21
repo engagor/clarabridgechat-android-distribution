@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="Theme.ClarabridgeChat" parent="@style/Theme.AppCompat.Light.DarkActionBar">
+        <item name="windowActionBarOverlay">true</item>
+        <item name="android:windowActionBarOverlay">true</item>
+        <item name="actionBarStyle">@style/Theme.ClarabridgeChat.ActionBar</item>
+        <item name="colorAccent">@color/ClarabridgeChat_accent</item>
+        <item name="colorPrimary">@color/ClarabridgeChat_accent</item>
+        <item name="colorPrimaryDark">@color/ClarabridgeChat_accentDark</item>
+    </style>
+
+    <style name="Theme.ClarabridgeChat.NoActionBar" parent="@style/Theme.ClarabridgeChat">
+        <item name="windowNoTitle">true</item>
+        <item name="windowActionBar">false</item>
+    </style>
+
+    <style name="Theme.ClarabridgeChat.ActionBar" parent="@style/Widget.AppCompat.Light.ActionBar.Solid.Inverse">
+        <item name="background">@color/ClarabridgeChat_accent</item>
+    </style>
+
+    <style name="Theme.AppCompat.NoActionBar.FullScreen" parent="@style/Theme.AppCompat">
+        <item name="windowNoTitle">true</item>
+        <item name="windowActionBar">false</item>
+        <item name="android:windowFullscreen">true</item>
+        <item name="android:windowContentOverlay">@null</item>
+    </style>
+</resources>
+

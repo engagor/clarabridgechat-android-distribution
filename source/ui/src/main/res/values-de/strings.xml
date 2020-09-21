@@ -1,0 +1,26 @@
+<resources>
+    <string name="ClarabridgeChat_activityConversation">Nachrichten</string>
+    <string name="ClarabridgeChat_btnSend">Senden</string>
+    <string name="ClarabridgeChat_errorCouldNotConnect">Die Verbindung mit dem Server ist nicht möglich.</string>
+    <string name="ClarabridgeChat_errorSendingMessage">Nachricht wurde nicht gesendet. Antippen, um es erneut zu versuchen.</string>
+    <string name="ClarabridgeChat_errorUserOffline">Keine Internetverbindung.</string>
+    <string name="ClarabridgeChat_messageHint">Nachricht eingeben…</string>
+    <string name="ClarabridgeChat_startOfConversation">Dies ist der Beginn deiner Unterhaltung mit dem Team von %1$s. Lass uns in Kontakt bleiben, damit wir dir helfen können, das Beste aus deiner App herauszuholen.</string>
+    <string name="ClarabridgeChat_welcome">Hinterlasse uns eine Nachricht zu allem, was dir auf dem Herzen liegt. Wir antworten auf deine Fragen, Anregungen oder sonstige Wünsche so schnell wie möglich.</string>
+    <string name="ClarabridgeChat_btnMenu">Bild auswählen</string>
+    <string name="ClarabridgeChat_btnChangeCard">Kreditkarte ändern</string>
+    <string name="ClarabridgeChat_btnPayNow">Jetzt bezahlen</string>
+    <string name="ClarabridgeChat_btnPaymentCompleted">Zahlung abgeschlossen</string>
+    <string name="ClarabridgeChat_chooseFromLibrary">Bild aus Galerie</string>
+    <string name="ClarabridgeChat_chooseOption">Bitte wählen…</string>
+    <string name="ClarabridgeChat_creditErrorMessage">Mit dieser Kreditkarte ist ein Fehler aufgetreten. Bitte versuche es erneut oder verwende eine andere Karte.</string>
+    <string name="ClarabridgeChat_creditMessage">Gib deine Kreditkartennummer ein, um %1$s sicher an %2$s zu senden.</string>
+    <string name="ClarabridgeChat_errorPostback">Bei der Verarbeitung ist ein Fehler aufgetreten. Bitte versuche es erneut.</string>
+    <string name="ClarabridgeChat_imageUploadRetry">Antippen, um Bild erneut zu laden.</string>
+    <string name="ClarabridgeChat_problemGettingPhoto">Beim Abrufen deines Fotos ist ein Fehler aufgetreten.</string>
+    <string name="ClarabridgeChat_problemLaunchingCamera">Beim Starten der Kamera ist ein Fehler aufgetreten.</string>
+    <string name="ClarabridgeChat_problemSavingPhoto">Beim Speichern deines Fotos ist ein Fehler aufgetreten.</string>
+    <string name="ClarabridgeChat_savedCreditMessage">Du bist dabei, %1$s sicher an %2$s zu senden.</string>
+    <string name="ClarabridgeChat_settings_timestampFormat">d. MMMM, H:mm</string>
+    <string name="ClarabridgeChat_takePhoto">Foto aufnehmen</string>
+</resources>

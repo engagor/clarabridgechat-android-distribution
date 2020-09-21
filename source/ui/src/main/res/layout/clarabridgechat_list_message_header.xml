@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:layout_width="match_parent"
+              android:layout_height="wrap_content"
+              android:orientation="vertical"
+              android:padding="16dp">
+
+    <TextView
+        android:id="@+id/clarabridgechat_welcome_message"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:lineSpacingMultiplier="@dimen/ClarabridgeChat_lineSpacingMultiplier"
+        android:text="@string/ClarabridgeChat_startOfConversation"
+        android:textColor="@color/ClarabridgeChat_header"
+        android:textSize="@dimen/ClarabridgeChat_header"/>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:lineSpacingMultiplier="@dimen/ClarabridgeChat_lineSpacingMultiplier"
+        android:text="@string/ClarabridgeChat_welcome"
+        android:textColor="@color/ClarabridgeChat_header"
+        android:textSize="@dimen/ClarabridgeChat_header"/>
+</LinearLayout>
+

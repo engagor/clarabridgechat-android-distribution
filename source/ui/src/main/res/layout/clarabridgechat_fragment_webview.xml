@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:clickable="true">
+
+    <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/fader"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:alpha="0.7"
+        android:background="#333333" />
+
+    <LinearLayout
+        android:id="@+id/webviewContainer"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <android.support.v7.widget.Toolbar
+            android:id="@+id/webviewToolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:background="@drawable/background_webview_toolbar"
+            android:clickable="true" />
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <WebView
+                android:id="@+id/webview"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
+
+            <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                xmlns:tools="http://schemas.android.com/tools"
+                android:id="@+id/webviewProgress"
+                android:layout_width="match_parent"
+                android:layout_height="2dp"
+                tools:ignore="UselessParent">
+
+                <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="10dp"
+                    android:layout_gravity="center_vertical">
+
+                    <ProgressBar
+                        style="?android:attr/progressBarStyleHorizontal"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:indeterminate="true" />
+                </FrameLayout>
+            </FrameLayout>
+        </FrameLayout>
+    </LinearLayout>
+</FrameLayout>

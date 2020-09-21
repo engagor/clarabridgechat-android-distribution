@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="ClarabridgeChat_webviewHeightCompact">350dp</dimen>
+    <dimen name="ClarabridgeChat_webviewHeightTall">450dp</dimen>
+    <dimen name="ClarabridgeChat_webviewTabletHeightFull">550dp</dimen>
+</resources>
+

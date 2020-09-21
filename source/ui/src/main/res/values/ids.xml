@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <item name="custom" type="id" />
+    <item name="cc_form_layout" type="id" />
+    <item name="cc_entry" type="id" />
+    <item name="cc_entry_internal" type="id" />
+    <item name="cc_card" type="id" />
+    <item name="cc_exp" type="id" />
+    <item name="cc_ccv" type="id" />
+    <item name="cc_zip" type="id" />
+    <item name="text_helper" type="id" />
+    <item name="clarabridgechat_image_view_id" type="id" />
+    <item name="clarabridgechat_overlay_view_id" type="id" />
+    <item name="clarabridgechat_file_container_view_id" type="id" />
+    <item name="clarabridgechat_image_container_view_id" type="id" />
+    <item name="clarabridgechat_load_image_container_view_id" type="id" />
+    <item name="clarabridgechat_message_container_view_id" type="id" />
+    <item name="clarabridgechat_button_container_view_id" type="id" />
+    <item name="clarabridgechat_carousel_container_view_id" type="id" />
+</resources>
+

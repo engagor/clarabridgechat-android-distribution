@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <integer name="ClarabridgeChat_settings_hoursBetweenTimestamps">6</integer>
+    <integer name="ClarabridgeChat_settings_inputMaxLines">5</integer>
+    <integer name="ClarabridgeChat_settings_notificationId">1</integer>
+    <string name="ClarabridgeChat_settings_conversationIdKey" translatable="false">conversationId</string>
+    <string name="ClarabridgeChat_settings_notificationTriggerKey" translatable="false">trigger</string>
+    <string name="ClarabridgeChat_settings_notificationTrigger" translatable="false">ClarabridgeChatNotification</string>
+    <string name="ClarabridgeChat_settings_notificationTag">ClarabridgeChat</string>
+    <string name="ClarabridgeChat_settings_timestampFormat">MMMM d, h:mm a</string>
+    <string name="ClarabridgeChat_settings_shortTimestampFormat" translatable="false">h:mm a</string>
+    <string name="ClarabridgeChat_settings_beforeNotificationIntent">com.clarabridge.ui.NotificationActivity</string>
+    <string name="ClarabridgeChat_settings_notificationIntent">com.clarabridge.ui.ConversationActivity</string>
+    <string name="ClarabridgeChat_settings_fileProvider" translatable="false">CLARABRIDGECHAT_FILE_PROVIDER</string>
+    <string name="ClarabridgeChat_settings_notificationChannelId" translatable="false">com.clarabridge.notification</string>
+    <string name="ClarabridgeChat_settings_notificationChannelName" translatable="true">Messages</string>
+    <string name="ClarabridgeChat_settings_takePhotoMenuKey" translatable="false">takePhoto</string>
+    <string name="ClarabridgeChat_settings_chooseMediaMenuKey" translatable="false">chooseMedia</string>
+    <string name="ClarabridgeChat_settings_uploadFileMenuKey" translatable="false">uploadFile</string>
+    <string name="ClarabridgeChat_settings_shareLocationMenuKey" translatable="false">shareLocation</string>
+    <string-array name="ClarabridgeChat_settings_showMenuOptions" type="array">
+        <item>@string/ClarabridgeChat_settings_takePhotoMenuKey</item>
+        <item>@string/ClarabridgeChat_settings_chooseMediaMenuKey</item>
+        <item>@string/ClarabridgeChat_settings_uploadFileMenuKey</item>
+        <item>@string/ClarabridgeChat_settings_shareLocationMenuKey</item>
+    </string-array>
+    <item name="ClarabridgeChat_lineSpacingMultiplier" format="float" type="dimen">1.25</item>
+</resources>
+

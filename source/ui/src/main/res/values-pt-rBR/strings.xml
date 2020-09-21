@@ -1,0 +1,11 @@
+<resources>
+    <string name="ClarabridgeChat_activityConversation">Mensagens</string>
+    <string name="ClarabridgeChat_startOfConversation">Esse é o começo da sua conversa com a equipe %1$s.</string>
+    <string name="ClarabridgeChat_welcome">Sinta-se à vontade para nos perguntar qualquer coisa. Responderemos às suas perguntas, sugestões, ou a qualquer outra mansagem, o mais rápido possível.</string>
+    <string name="ClarabridgeChat_messageHint">Digite uma mensagem&#8230;</string>
+    <string name="ClarabridgeChat_btnSend">Enviar</string>
+    <string name="ClarabridgeChat_errorSendingMessage">A mensagem não foi entregue. Toque para tentar novamente.</string>
+    <string name="ClarabridgeChat_errorCouldNotConnect">Não foi possível conectar ao servidor.</string>
+    <string name="ClarabridgeChat_errorUserOffline">Sem conexão à Internet.</string>
+</resources>
+

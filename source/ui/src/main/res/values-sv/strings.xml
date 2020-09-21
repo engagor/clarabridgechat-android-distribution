@@ -1,0 +1,11 @@
+<resources>
+    <string name="ClarabridgeChat_activityConversation">Meddelanden</string>
+    <string name="ClarabridgeChat_startOfConversation">Här börjar din konversation med %1$s teamet. Vi finns här för att hjälpa dig få koll på allt i din app.</string>
+    <string name="ClarabridgeChat_welcome">Tveka inte att lämna oss ett meddelande om vadhelst du funderar på. Vi återkommer till dig så fort vi kan.</string>
+    <string name="ClarabridgeChat_messageHint">Skriv ett meddelande&#8230;</string>
+    <string name="ClarabridgeChat_btnSend">Skicka</string>
+    <string name="ClarabridgeChat_errorSendingMessage">Meddelande ej levererat. Tryck för nytt försök.</string>
+    <string name="ClarabridgeChat_errorCouldNotConnect">Ingen kontakt med servern.</string>
+    <string name="ClarabridgeChat_errorUserOffline">Ingen nätverksanslutning.</string>
+</resources>
+
