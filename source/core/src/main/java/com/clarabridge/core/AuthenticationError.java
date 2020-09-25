@@ -1,5 +1,7 @@
 package com.clarabridge.core;
 
+import androidx.annotation.NonNull;
+
 public class AuthenticationError {
 
     private final int status;
@@ -22,5 +24,14 @@ public class AuthenticationError {
      */
     public String getData() {
         return data;
+    }
+
+    @NonNull
+    @Override
+    public String toString() {
+        return "AuthenticationError{" +
+                "status=" + status +
+                ", data='" + data + '\'' +
+                '}';
     }
 }

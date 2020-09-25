@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:padding="@dimen/ClarabridgeChat_conversationListItemMargin">
+
+    <com.clarabridge.features.common.ConversationAvatar
+        android:id="@+id/clarabridgechat_conversations_list_avatar_icon"
+        android:layout_width="@dimen/ClarabridgeChat_conversationListAvatar"
+        android:layout_height="@dimen/ClarabridgeChat_conversationListAvatar"
+        android:layout_marginEnd="@dimen/ClarabridgeChat_conversationListItemMargin"
+        android:layout_marginRight="@dimen/ClarabridgeChat_conversationListItemMargin"
+        android:padding="@dimen/ClarabridgeChat_conversationListAvatarPadding"
+        tools:ignore="ContentDescription" />
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <LinearLayout
+            android:id="@+id/conversation_heading"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+
+            <TextView
+                android:id="@+id/conversation_name"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="start"
+                android:layout_weight="1"
+                android:ellipsize="end"
+                android:lineSpacingMultiplier="1.45"
+                android:singleLine="true"
+                android:textColor="@color/ClarabridgeChat_conversationListTitleTextColor"
+                android:textSize="@dimen/ClarabridgeChat_descriptionText"
+                android:textStyle="bold"
+                tools:text="Joe Soap" />
+
+            <com.clarabridge.features.conversationlist.ConversationListDateView
+                android:id="@+id/conversationLastUpdated_timestamp"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_marginStart="@dimen/ClarabridgeChat_conversationListItemMargin"
+                android:layout_marginLeft="@dimen/ClarabridgeChat_conversationListItemMargin"
+                android:layout_weight="0"
+                android:gravity="center_vertical"
+                android:singleLine="true"
+                android:textColor="@color/ClarabridgeChat_conversationListTitleTimestampTextColor"
+                android:textSize="@dimen/ClarabridgeChat_messageDate"
+                tools:text="19th Aug" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/clarabridgechat_conversations_list_message_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/conversation_heading"
+            android:layout_alignStart="@id/conversation_heading"
+            android:layout_alignLeft="@id/conversation_heading"
+            android:layout_marginEnd="@dimen/ClarabridgeChat_conversationListItemMargin"
+            android:layout_marginRight="@dimen/ClarabridgeChat_conversationListItemMargin"
+            android:layout_toStartOf="@id/clarabridgechat_conversations_list_unread_count"
+            android:layout_toLeftOf="@id/clarabridgechat_conversations_list_unread_count"
+            android:ellipsize="end"
+            android:maxLines="2"
+            android:textColor="@color/ClarabridgeChat_remoteMessageText"
+            android:textSize="@dimen/ClarabridgeChat_descriptionText"
+            tools:text="Some message that should be more than two lines and also the text should be truncated as well" />
+
+        <TextView
+            android:id="@+id/clarabridgechat_conversations_list_unread_count"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignTop="@id/clarabridgechat_conversations_list_message_text"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentRight="true"
+            android:background="@drawable/clarabridgechat_badge_count"
+            android:gravity="center"
+            android:minWidth="@dimen/ClarabridgeChat_unread_badge_size"
+            android:minHeight="@dimen/ClarabridgeChat_unread_badge_size"
+            android:paddingLeft="@dimen/ClarabridgeChat_unread_badge_padding"
+            android:paddingRight="@dimen/ClarabridgeChat_unread_badge_padding"
+            android:textColor="@color/ClarabridgeChat_unreadBadgeText"
+            android:textSize="@dimen/ClarabridgeChat_unread_badge_text_size"
+            android:visibility="gone"
+            tools:text="3"
+            tools:visibility="visible" />
+
+    </RelativeLayout>
+
+</LinearLayout>

@@ -2,7 +2,7 @@ package com.clarabridge.ui;
 
 import android.content.Context;
 import android.content.Intent;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import com.clarabridge.core.utils.StringUtils;
 
@@ -12,9 +12,11 @@ import com.clarabridge.core.utils.StringUtils;
 public class ConversationActivityBuilder {
 
     static final String INTENT_STARTING_TEXT = "INTENT_STARTING_TEXT";
+    static final String INTENT_CONVERSATION_ID = "INTENT_CONVERSATION_ID";
 
     private int flags;
     private String startingText;
+    private String conversationId;
 
     /**
      * Creates a new instance of {@link ConversationActivityBuilder} for configuring the activity
@@ -46,6 +48,17 @@ public class ConversationActivityBuilder {
     }
 
     /**
+     * Specifies the conversation to be loaded
+     *
+     * @param conversationId the conversationId to load
+     * @return the {@link ConversationActivityBuilder}
+     */
+    public ConversationActivityBuilder withConversationId(String conversationId) {
+        this.conversationId = conversationId;
+        return this;
+    }
+
+    /**
      * Starts the {@link ConversationActivity} with the specified configuration
      *
      * @param context the {@link Context} from which {@link Context#startActivity(Intent)} will be invoked
@@ -65,6 +78,10 @@ public class ConversationActivityBuilder {
 
         if (!StringUtils.isEmpty(startingText)) {
             intent.putExtra(INTENT_STARTING_TEXT, startingText);
+        }
+
+        if (!StringUtils.isEmpty(conversationId)) {
+            intent.putExtra(INTENT_CONVERSATION_ID, conversationId);
         }
 
         if (flags != 0) {

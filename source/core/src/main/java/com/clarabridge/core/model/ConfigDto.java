@@ -17,6 +17,9 @@ public class ConfigDto implements Serializable {
     @SerializedName("restRetryPolicy")
     private RetryConfigurationDto retryConfiguration;
 
+    @SerializedName("integration")
+    private ConfigIntegrationDto configIntegrationDto;
+
     @SerializedName("integrations")
     private List<IntegrationDto> integrations;
 
@@ -53,5 +56,13 @@ public class ConfigDto implements Serializable {
 
     public void setIntegrations(List<IntegrationDto> integrations) {
         this.integrations = integrations;
+    }
+
+    public ConfigIntegrationDto getConfigIntegrationDto() {
+        return configIntegrationDto;
+    }
+
+    public void setConfigIntegrationDto(ConfigIntegrationDto configIntegrationDto) {
+        this.configIntegrationDto = configIntegrationDto;
     }
 }

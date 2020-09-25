@@ -15,15 +15,18 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
 import javax.net.SocketFactory;
+import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLException;
 import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
 
+import com.clarabridge.core.AuthenticationError;
 import com.clarabridge.core.BuildConfig;
 import com.clarabridge.core.Logger;
 import com.clarabridge.core.http.Header;
 import com.clarabridge.core.http.StatusLine;
+import com.clarabridge.core.utils.BackgroundThread;
 
 public class WebSocketClient {
 
@@ -35,7 +38,6 @@ public class WebSocketClient {
     private Listener listener;
     private Socket socket;
     private Thread thread;
-    private HandlerThread handlerThread;
     private Handler handler;
     private Handler uiHandler;
     private HybiParser parser;
@@ -46,8 +48,7 @@ public class WebSocketClient {
         this.listener = listener;
         parser = new HybiParser(this);
 
-        handlerThread = new HandlerThread("websocket-thread");
-        handlerThread.start();
+        HandlerThread handlerThread = BackgroundThread.get();
         handler = new Handler(handlerThread.getLooper());
     }
 
@@ -108,6 +109,10 @@ public class WebSocketClient {
 
                     if (statusLine == null) {
                         throw new Exception("Received no reply from server.");
+                    } else if (statusLine.getCode() == HttpsURLConnection.HTTP_UNAUTHORIZED) {
+                        final AuthenticationError authenticationError = new AuthenticationError(
+                                statusLine.getCode(), statusLine.getMessage());
+                        throw new UnauthorizedException(authenticationError);
                     } else if (statusLine.getCode() != SC_SWITCHING_PROTOCOLS) {
                         throw new Exception("Unexpected code " + statusLine.getCode() + ", " + statusLine.getMessage());
                     }

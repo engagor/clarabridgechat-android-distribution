@@ -1,7 +1,7 @@
 package com.clarabridge.core;
 
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import java.util.Date;
 
@@ -22,27 +22,27 @@ public final class Participant {
 
     /**
      * The unique ID of this participant. The same user can be a participant of multiple conversations,
-     * with a different ID for each conversation, but {@link #getAppUserId()} will always be the same.
+     * with a different ID for each conversation, but {@link #getUserId()} will always be the same.
      *
      * @return the participant ID
      *
-     * @see #getAppUserId()
+     * @see #getUserId()
      */
     public String getId() {
         return entity.getId();
     }
 
     /**
-     * The assigned appUserId for the user that this participant is associated with. The same user
+     * The assigned userId for the user that this participant is associated with. The same user
      * can be a participant of multiple conversation.
      * <p>
      * This property is set automatically by ClarabridgeChat, and is not configurable.
-     * This is analogous to {@link User#getAppUserId()}.
+     * This is analogous to {@link User#getUserId()}.
      *
-     * @return the participant appUserId
+     * @return the participant userId
      */
-    public String getAppUserId() {
-        return entity.getAppUserId();
+    public String getUserId() {
+        return entity.getUserId();
     }
 
     /**

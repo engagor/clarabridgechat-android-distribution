@@ -1,6 +1,6 @@
 package com.clarabridge.core.facade;
 
-import android.support.annotation.Nullable;
+import androidx.annotation.Nullable;
 
 /**
  * A {@link BaseStorage} decorator that synchronizes reading, writing, and removing.

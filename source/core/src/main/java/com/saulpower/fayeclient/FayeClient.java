@@ -39,6 +39,7 @@ import java.net.URI;
 import java.util.Date;
 import java.util.Iterator;
 
+import com.clarabridge.core.AuthenticationError;
 import com.clarabridge.core.Logger;
 
 public class FayeClient implements Listener {
@@ -457,6 +458,17 @@ public class FayeClient implements Listener {
      */
     @Override
     public void onError(Exception error) {
+        //check if caused by unauthorized
+        if (error instanceof UnauthorizedException) {
+            Logger.d(TAG, "UnauthorizedException " + error.getMessage(), error);
+            if (fayeListener != null) {
+                final AuthenticationError authenticationError =
+                        ((UnauthorizedException) error).getAuthenticationError();
+                fayeListener.onAuthenticationError(authenticationError);
+            }
+            return;
+        }
+
         if (!connected) {
             return;
         }
@@ -639,6 +651,8 @@ public class FayeClient implements Listener {
         void connectedToServer();
 
         void disconnectedFromServer();
+
+        void onAuthenticationError(AuthenticationError authenticationError);
 
         void subscribedToChannel(String subscription);
 

@@ -8,15 +8,17 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.annotation.VisibleForTesting;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.VisibleForTesting;
 import android.util.Log;
 
+import java.net.HttpURLConnection;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import com.clarabridge.core.di.DaggerClarabridgeChatComponent;
 import com.clarabridge.core.di.ClarabridgeChatComponent;
@@ -26,13 +28,16 @@ import com.clarabridge.core.model.ConversationDto;
 import com.clarabridge.core.model.ConversationEventDto;
 import com.clarabridge.core.model.MessageActionDto;
 import com.clarabridge.core.model.MessageDto;
+import com.clarabridge.core.model.PostConversationMessageDto;
 import com.clarabridge.core.service.ServiceObserver;
 import com.clarabridge.core.service.ClarabridgeChatObserver;
 import com.clarabridge.core.service.ClarabridgeChatService;
 import com.clarabridge.core.service.ClarabridgeChatServiceBinder;
+import com.clarabridge.core.utils.JavaUtils;
+import com.clarabridge.core.utils.Predicate;
 import com.clarabridge.core.utils.StringUtils;
 
-import static android.support.annotation.VisibleForTesting.NONE;
+import static androidx.annotation.VisibleForTesting.NONE;
 import static com.clarabridge.core.ClarabridgeChat.INITIALIZATION_LOCK;
 
 class ClarabridgeChatInternal implements Application.ActivityLifecycleCallbacks,
@@ -98,8 +103,8 @@ class ClarabridgeChatInternal implements Application.ActivityLifecycleCallbacks,
     }
 
     @Nullable
-    String getAppUserId() {
-        return service != null ? service.getAppUserId() : null;
+    String getUserId() {
+        return service != null ? service.getUserId() : null;
     }
 
     @Nullable
@@ -136,6 +141,12 @@ class ClarabridgeChatInternal implements Application.ActivityLifecycleCallbacks,
         });
     }
 
+    /**
+     * Retrieve the the 10 most recently active {@link com.clarabridge.core.Conversation}s for the current user, sorted
+     * from most recently updated to last.
+     *
+     * @param integratorCallback a {@link ClarabridgeChatCallback} to be invoked when the list is ready
+     */
     void getConversationsList(@NonNull final ClarabridgeChatCallback<List<Conversation>> integratorCallback) {
         addToServiceCallQueue(new Runnable() {
             @Override
@@ -149,7 +160,7 @@ class ClarabridgeChatInternal implements Application.ActivityLifecycleCallbacks,
                                 new Response.Builder<List<Conversation>>(response.getStatus())
                                         .withError(response.getError());
 
-                        if (response.getData() != null) {
+                        if (response.getData() != null && !response.getData().isEmpty()) {
                             List<Conversation> conversationList = new ArrayList<>();
                             for (ConversationDto entity : response.getData()) {
                                 conversationList.add(new ConversationProxy(entity));
@@ -164,6 +175,47 @@ class ClarabridgeChatInternal implements Application.ActivityLifecycleCallbacks,
         });
     }
 
+    /**
+     * Retrieve the 10 more recently active {@link com.clarabridge.core.Conversation}s for the current user, sorted
+     * from most recently updated to last.
+     *
+     * @param integratorCallback a {@link ClarabridgeChatCallback} to be invoked when the list is ready
+     */
+    void getMoreConversationsList(@NonNull final ClarabridgeChatCallback<List<Conversation>> integratorCallback) {
+        addToServiceCallQueue(new Runnable() {
+            @Override
+            public void run() {
+                service.getMoreConversationsList(new ClarabridgeChatCallback<List<ConversationDto>>() {
+                    @Override
+                    public void run(@NonNull Response<List<ConversationDto>> response) {
+                        Response.Builder<List<Conversation>> responseBuilder =
+                                new Response.Builder<List<Conversation>>(response.getStatus())
+                                        .withError(response.getError());
+
+                        if (response.getData() != null && !response.getData().isEmpty()) {
+                            List<Conversation> conversationList = new ArrayList<>();
+                            for (ConversationDto entity : response.getData()) {
+                                conversationList.add(new ConversationProxy(entity));
+                            }
+                            responseBuilder.withData(conversationList);
+                        }
+
+                        integratorCallback.run(responseBuilder.build());
+                    }
+                });
+            }
+        });
+    }
+
+    /**
+     * Accessor method for knowing if there are more conversations to be fetched or not.
+     *
+     * @return true if there is more conversations to be fetched or false if not.
+     */
+    boolean hasMoreConversations() {
+        return service.isHasMoreConversations();
+    }
+
     @Nullable
     String getConversationId() {
         return service != null && service.getConversation() != null
@@ -173,7 +225,7 @@ class ClarabridgeChatInternal implements Application.ActivityLifecycleCallbacks,
 
     @Nullable
     Config getConfig() {
-        return service != null && service.getConversation() != null
+        return service != null && service.getConversation() != null && service.getConfig() != null
                 ? new Config(service.getConfig())
                 : null;
     }
@@ -199,8 +251,8 @@ class ClarabridgeChatInternal implements Application.ActivityLifecycleCallbacks,
     }
 
     @Nullable
-    String getUserId() {
-        return getRemoteUser() != null ? getRemoteUser().getUserId() : null;
+    String getExternalId() {
+        return getRemoteUser() != null ? getRemoteUser().getExternalId() : null;
     }
 
     @Nullable
@@ -209,8 +261,8 @@ class ClarabridgeChatInternal implements Application.ActivityLifecycleCallbacks,
     }
 
     void uploadImage(@NonNull final Message imageMessage, @NonNull final ClarabridgeChatCallback<Message> callback) {
-        if (shouldStartConversation()) {
-            startConversationAndSendImage(imageMessage, callback);
+        if (shouldCreateConversation()) {
+            createConversationAndSendImage(imageMessage, callback);
         } else {
             addToServiceCallQueue(new Runnable() {
                 @Override
@@ -222,8 +274,8 @@ class ClarabridgeChatInternal implements Application.ActivityLifecycleCallbacks,
     }
 
     void uploadFile(@NonNull final Message fileMessage, @NonNull final ClarabridgeChatCallback<Message> callback) {
-        if (shouldStartConversation()) {
-            startConversationAndSendFile(fileMessage, callback);
+        if (shouldCreateConversation()) {
+            createConversationAndSendFile(fileMessage, callback);
         } else {
             addToServiceCallQueue(new Runnable() {
                 @Override
@@ -235,8 +287,8 @@ class ClarabridgeChatInternal implements Application.ActivityLifecycleCallbacks,
     }
 
     void sendMessage(@NonNull final MessageDto entity) {
-        if (shouldStartConversation()) {
-            startConversationAndSendMessage(entity);
+        if (shouldCreateConversation()) {
+            createConversationAndSendMessage(entity);
         } else {
             addToServiceCallQueue(new Runnable() {
                 @Override
@@ -252,97 +304,131 @@ class ClarabridgeChatInternal implements Application.ActivityLifecycleCallbacks,
      *
      * @return true if there's no conversation loaded in {@link #service}, false otherwise
      */
-    private boolean shouldStartConversation() {
+    private boolean shouldCreateConversation() {
         return service != null && service.getConversationId() == null;
     }
 
-    private void startConversationAndSendImage(@NonNull final Message imageMessage,
+    private void createConversationAndSendImage(@NonNull final Message imageMessage,
+                                                @NonNull final ClarabridgeChatCallback<Message> uploadCallback) {
+        createConversation("message:appUser", null, null, null,
+                Collections.<Message>emptyList(), Collections.<String, Object>emptyMap(),
+                new ClarabridgeChatCallback<Void>() {
+                    @Override
+                    public void run(@NonNull Response<Void> response) {
+                        if (response.getError() == null) {
+                            addToServiceCallQueue(new Runnable() {
+                                @Override
+                                public void run() {
+                                    service.uploadImage(imageMessage, uploadCallback);
+                                }
+                            });
+                        } else {
+                            Response<Message> callbackResponse =
+                                    new Response.Builder<Message>(response.getStatus())
+                                            .withError(response.getError())
+                                            .withData(imageMessage)
+                                            .build();
+                            service.onFileUploadComplete(callbackResponse, null, uploadCallback);
+                        }
+                    }
+                });
+    }
+
+    private void createConversationAndSendFile(@NonNull final Message fileMessage,
                                                @NonNull final ClarabridgeChatCallback<Message> uploadCallback) {
-        startConversation("message:appUser", new ClarabridgeChatCallback<Void>() {
-            @Override
-            public void run(@NonNull Response<Void> response) {
-                if (response.getError() == null) {
-                    addToServiceCallQueue(new Runnable() {
-                        @Override
-                        public void run() {
-                            service.uploadImage(imageMessage, uploadCallback);
+        createConversation("message:appUser", null, null, null,
+                Collections.<Message>emptyList(), Collections.<String, Object>emptyMap(),
+                new ClarabridgeChatCallback<Void>() {
+                    @Override
+                    public void run(@NonNull Response<Void> response) {
+                        if (response.getError() == null) {
+                            addToServiceCallQueue(new Runnable() {
+                                @Override
+                                public void run() {
+                                    service.uploadFile(fileMessage, uploadCallback);
+                                }
+                            });
+                        } else {
+                            Response<Message> callbackResponse =
+                                    new Response.Builder<Message>(response.getStatus())
+                                            .withError(response.getError())
+                                            .withData(fileMessage)
+                                            .build();
+                            service.onFileUploadComplete(callbackResponse, null, uploadCallback);
                         }
-                    });
-                } else {
-                    Response<Message> callbackResponse =
-                            new Response.Builder<Message>(response.getStatus())
-                                    .withError(response.getError())
-                                    .withData(imageMessage)
-                                    .build();
-                    service.onFileUploadComplete(callbackResponse, null, uploadCallback);
-                }
-            }
-        });
+                    }
+                });
     }
 
-    private void startConversationAndSendFile(@NonNull final Message fileMessage,
-                                              @NonNull final ClarabridgeChatCallback<Message> uploadCallback) {
-        startConversation("message:appUser", new ClarabridgeChatCallback<Void>() {
-            @Override
-            public void run(@NonNull Response<Void> response) {
-                if (response.getError() == null) {
-                    addToServiceCallQueue(new Runnable() {
-                        @Override
-                        public void run() {
-                            service.uploadFile(fileMessage, uploadCallback);
+    private void createConversationAndSendMessage(@NonNull final MessageDto entity) {
+        createConversation("message:appUser", null, null, null,
+                Collections.<Message>emptyList(), Collections.<String, Object>emptyMap(),
+                new ClarabridgeChatCallback<Void>() {
+                    @Override
+                    public void run(@NonNull Response<Void> response) {
+                        if (response.getError() == null) {
+                            addToServiceCallQueue(new Runnable() {
+                                @Override
+                                public void run() {
+                                    service.sendMessage(entity);
+                                }
+                            });
+                        } else {
+                            entity.setStatus(MessageDto.Status.SENDING_FAILED);
+                            service.onMessageSent(entity);
                         }
-                    });
-                } else {
-                    Response<Message> callbackResponse =
-                            new Response.Builder<Message>(response.getStatus())
-                                    .withError(response.getError())
-                                    .withData(fileMessage)
-                                    .build();
-                    service.onFileUploadComplete(callbackResponse, null, uploadCallback);
-                }
-            }
-        });
+                    }
+                });
     }
 
-    private void startConversationAndSendMessage(@NonNull final MessageDto entity) {
-        startConversation("message:appUser", new ClarabridgeChatCallback<Void>() {
-            @Override
-            public void run(@NonNull Response<Void> response) {
-                if (response.getError() == null) {
-                    addToServiceCallQueue(new Runnable() {
-                        @Override
-                        public void run() {
-                            service.sendMessage(entity);
-                        }
-                    });
-                } else {
-                    entity.setStatus(MessageDto.Status.SENDING_FAILED);
-                    service.onMessageSent(entity);
-                }
-            }
-        });
-    }
-
-    void startConversation(@NonNull final String intent,
-                           @NonNull final ClarabridgeChatCallback<Void> callback) {
+    void createConversation(@NonNull final String intent,
+                            @Nullable final String name,
+                            @Nullable final String description,
+                            @Nullable final String iconUrl,
+                            @NonNull final List<Message> messages,
+                            @Nullable final Map<String, Object> metadata,
+                            @NonNull final ClarabridgeChatCallback<Void> callback) {
         addToServiceCallQueue(new Runnable() {
             @Override
             public void run() {
                 serviceCallBlocked = true;
 
+                //check if messages contains any non text messages
+                boolean containsOnlyTextMessage = JavaUtils.all(messages, new Predicate<Message>() {
+                    @Override
+                    public boolean apply(Message data) {
+                        return MessageType.TEXT.getValue().equals(data.getType());
+                    }
+                });
+                if (!containsOnlyTextMessage) {
+                    ClarabridgeChatCallback.Response.Builder<Void> responseBuilder =
+                            new ClarabridgeChatCallback.Response.Builder<Void>(HttpURLConnection.HTTP_BAD_REQUEST)
+                                    .withError("Invalid MessageType. Only messages of type text are supported.");
+                    callback.run(responseBuilder.build());
+                    return;
+                }
+
+                //map messages to the MessageDto object
+                final List<PostConversationMessageDto> messageDtos = new ArrayList<>(messages.size());
+                for (Message message : messages) {
+                    messageDtos.add(new PostConversationMessageDto(MessageType.TEXT.getValue(), message.getText()));
+                }
+
                 ClarabridgeChatCallback<Void> onCreationComplete = new ClarabridgeChatCallback<Void>() {
                     @Override
                     public void run(@NonNull Response<Void> response) {
+                        conversation.updateEntity(service.getConversation());
                         serviceCallBlocked = false;
                         callback.run(response);
                     }
                 };
-
-                boolean userExists = getAppUserId() != null;
-                if (userExists) {
-                    service.createConversation(intent, onCreationComplete);
+                //check if user exists, create user and conversation in one go using createUser
+                boolean userExists = getUserId() != null;
+                if (!userExists) {
+                    service.createUser(intent, name, description, iconUrl, messageDtos, onCreationComplete);
                 } else {
-                    service.createUser(intent, onCreationComplete);
+                    // user exists, create conversation using createConversation
+                    service.createConversation(name, description, iconUrl, messageDtos, metadata, onCreationComplete);
                 }
             }
         });
@@ -379,6 +465,37 @@ class ClarabridgeChatInternal implements Application.ActivityLifecycleCallbacks,
         });
     }
 
+    void updateConversationById(@NonNull final String conversationId,
+                                @Nullable final String name,
+                                @Nullable final String description,
+                                @Nullable final String iconUrl,
+                                @Nullable final Map<String, Object> metadata,
+                                @NonNull final ClarabridgeChatCallback<Conversation> callback) {
+        addToServiceCallQueue(new Runnable() {
+            @Override
+            public void run() {
+                serviceCallBlocked = true;
+                service.updateConversationById(conversationId, name, description, iconUrl, metadata,
+                        new ClarabridgeChatCallback<ConversationDto>() {
+                            @Override
+                            public void run(@NonNull Response<ConversationDto> response) {
+                                serviceCallBlocked = false;
+                                Response.Builder<Conversation> responseBuilder =
+                                        new Response.Builder<Conversation>(response.getStatus())
+                                                .withError(response.getError());
+
+                                if (response.getData() != null) {
+                                    responseBuilder.withData(new ConversationProxy(response.getData()));
+                                }
+
+                                callback.run(responseBuilder.build());
+                            }
+                        });
+            }
+        });
+
+    }
+
     void setFirebaseCloudMessagingToken(final String token,
                                         @NonNull final ClarabridgeChatCallback<LoginResult> callback) {
         addToServiceCallQueue(new Runnable() {
@@ -409,17 +526,17 @@ class ClarabridgeChatInternal implements Application.ActivityLifecycleCallbacks,
         });
     }
 
-    void login(@NonNull final String userId,
+    void login(@NonNull final String externalId,
                @NonNull final String jwt,
                @NonNull final ClarabridgeChatCallback<LoginResult> callback) {
         addToServiceCallQueue(new Runnable() {
             @Override
             public void run() {
-                if (StringUtils.isEqual(getUserId(), userId) && StringUtils.isEqual(getJwt(), jwt)) {
+                if (StringUtils.isEqual(getExternalId(), externalId) && StringUtils.isEqual(getJwt(), jwt)) {
                     int status = getLastLoginResult() == LoginResult.SUCCESS ? 200 : 400;
                     String error = getLastLoginResult() == LoginResult.SUCCESS
                             ? null
-                            : "Login called with same userId/JWT combination. Ignoring!";
+                            : "Login called with same externalId/JWT combination. Ignoring!";
 
                     ClarabridgeChatCallback.Response<LoginResult> callbackResponse =
                             new ClarabridgeChatCallback.Response.Builder<LoginResult>(status)
@@ -435,7 +552,7 @@ class ClarabridgeChatInternal implements Application.ActivityLifecycleCallbacks,
                 service.onClarabridgeChatInitComplete(new Runnable() {
                     @Override
                     public void run() {
-                        service.login(userId, jwt, new ClarabridgeChatCallback<LoginResult>() {
+                        service.login(externalId, jwt, new ClarabridgeChatCallback<LoginResult>() {
                             @Override
                             public void run(@NonNull Response<LoginResult> response) {
                                 serviceCallBlocked = false;
@@ -450,7 +567,7 @@ class ClarabridgeChatInternal implements Application.ActivityLifecycleCallbacks,
     }
 
     void logout(@NonNull final ClarabridgeChatCallback<LogoutResult> callback) {
-        if (StringUtils.isEmpty(getUserId())) {
+        if (StringUtils.isEmpty(getExternalId())) {
             ClarabridgeChatCallback.Response<LogoutResult> callbackResponse =
                     new ClarabridgeChatCallback.Response.Builder<LogoutResult>(400)
                             .withError("Logout called but no user was logged in. Ignoring!")

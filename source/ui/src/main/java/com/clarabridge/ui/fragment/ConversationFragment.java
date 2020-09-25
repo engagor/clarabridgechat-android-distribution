@@ -23,6 +23,8 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.Matrix;
+import android.graphics.drawable.Drawable;
+import android.graphics.drawable.LayerDrawable;
 import android.location.Location;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -33,15 +35,18 @@ import android.os.Environment;
 import android.os.Handler;
 import android.os.Parcelable;
 import android.provider.MediaStore;
-import android.support.annotation.NonNull;
-import android.support.media.ExifInterface;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentTransaction;
-import android.support.v4.content.ContextCompat;
-import android.support.v4.content.FileProvider;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.exifinterface.media.ExifInterface;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
+import androidx.core.content.ContextCompat;
+import androidx.core.content.FileProvider;
+import androidx.appcompat.app.ActionBar;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 import android.text.Editable;
 import android.text.TextUtils;
 import android.text.TextWatcher;
@@ -62,6 +67,9 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.request.target.CustomTarget;
+import com.bumptech.glide.request.transition.Transition;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.tasks.OnCompleteListener;
@@ -80,6 +88,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+import com.clarabridge.core.Config;
 import com.clarabridge.core.Conversation;
 import com.clarabridge.core.ConversationEvent;
 import com.clarabridge.core.Coordinates;
@@ -95,6 +104,9 @@ import com.clarabridge.core.ClarabridgeChat;
 import com.clarabridge.core.ClarabridgeChatCallback;
 import com.clarabridge.core.ClarabridgeChatConnectionStatus;
 import com.clarabridge.core.utils.FileUtils;
+import com.clarabridge.core.utils.StringUtils;
+import com.clarabridge.features.common.AvatarData;
+import com.clarabridge.features.common.ConversationUtils;
 import com.clarabridge.ui.ConnectionStatus;
 import com.clarabridge.ui.R;
 import com.clarabridge.ui.adapter.MessageListAdapter;
@@ -188,6 +200,7 @@ public class ConversationFragment extends Fragment implements MessageListAdapter
     private Map<BannerState, String> bannerTexts = new HashMap<>();
     private BannerState currentBannerState = BannerState.ERROR_COULD_NOT_CONNECT;
     private String startingText;
+    private Config config;
 
     private enum BannerState {
         NONE(null),
@@ -472,8 +485,11 @@ public class ConversationFragment extends Fragment implements MessageListAdapter
         }
 
         conversation = ClarabridgeChat.getConversation();
+        config = ClarabridgeChat.getConfig();
 
         if (conversation != null) {
+            setToolbarTitleAndAvatar(conversation);
+
             if (lastMessageHasReplies(conversation)) {
                 messageListAdapter.setReplies(getLastMessageActions(conversation));
             } else {
@@ -728,17 +744,17 @@ public class ConversationFragment extends Fragment implements MessageListAdapter
     //================================================================================
 
     public void onMessagesReceived(final Conversation conversation, final List<Message> messages) {
-        int newAppMakerMessagesCount = 0;
+        int newBusinessMessagesCount = 0;
 
         for (Message message : messages) {
             if (!message.isFromCurrentUser()) {
                 messageListAdapter.removeTypingActivity();
-                newAppMakerMessagesCount++;
+                newBusinessMessagesCount++;
             }
         }
 
         if (messageListAdapter.getUnreadCount() > 0) {
-            messageListAdapter.setUnreadCount(messageListAdapter.getUnreadCount() + newAppMakerMessagesCount);
+            messageListAdapter.setUnreadCount(messageListAdapter.getUnreadCount() + newBusinessMessagesCount);
             messageListAdapter.notifyDataSetChanged();
         }
 
@@ -923,6 +939,45 @@ public class ConversationFragment extends Fragment implements MessageListAdapter
     //================================================================================
     // Private methods
     //================================================================================
+
+    private void setToolbarTitleAndAvatar(@NonNull Conversation conversation) {
+        Activity activity = getActivity();
+        if (activity instanceof  AppCompatActivity) {
+            final ActionBar actionBar = ((AppCompatActivity) activity).getSupportActionBar();
+            if (actionBar != null) {
+                actionBar.setDisplayShowTitleEnabled(true);
+                actionBar.setDisplayHomeAsUpEnabled(true);
+                actionBar.setDisplayUseLogoEnabled(true);
+
+                final String title = ConversationUtils.getTitle(conversation, config);
+                actionBar.setTitle(!StringUtils.isEmpty(title) ? title :
+                        getString(R.string.ClarabridgeChat_activityConversation));
+                actionBar.setSubtitle(ConversationUtils.getSubTitle(conversation));
+
+                final int logoSize = getResources().getDimensionPixelSize(R.dimen.ClarabridgeChat_actionBarIconSize);
+                final int paddingSize = getResources().getDimensionPixelSize(R.dimen.ClarabridgeChat_actionBarIconPadding);
+
+                final AvatarData avatarData = AvatarData.from(config, conversation);
+                ConversationUtils.addAvatarDataToGlide(avatarData, Glide.with(activity))
+                        .override(logoSize, logoSize)
+                        .into(new CustomTarget<Drawable>() {
+                            @Override
+                            public void onResourceReady(@NonNull Drawable resource,
+                                                        @Nullable Transition<? super Drawable> transition) {
+                                //add padding to the drawable so the title is not on top of the logo
+                                LayerDrawable logo = new LayerDrawable(new Drawable[]{resource});
+                                logo.setLayerInset(0, 0, 0, paddingSize, 0);
+                                actionBar.setLogo(logo);
+                            }
+
+                            @Override
+                            public void onLoadCleared(@Nullable Drawable placeholder) {
+                                //ignored
+                            }
+                        });
+            }
+        }
+    }
 
     private void processFileStream(final Uri uri) {
         final Toast retrievingFileToast = Toast.makeText(
@@ -1427,7 +1482,8 @@ public class ConversationFragment extends Fragment implements MessageListAdapter
             options.add(shareLocation);
         }
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity(),
+                R.style.Theme_ClarabridgeChat_Dialog);
 
         builder.setTitle(R.string.ClarabridgeChat_chooseOption)
                 .setItems(options.toArray(new CharSequence[options.size()]), new DialogInterface.OnClickListener() {

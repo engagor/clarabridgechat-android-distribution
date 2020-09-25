@@ -1,5 +1,7 @@
 package com.clarabridge.core.model;
 
+import com.google.gson.annotations.SerializedName;
+
 import java.util.List;
 
 /**
@@ -8,7 +10,11 @@ import java.util.List;
  */
 public class ConversationsListResponseDto {
 
+    @SerializedName("conversations")
     private List<ConversationDto> conversations;
+
+    @SerializedName("conversationsPagination")
+    private ConversationsPaginationResponseDto conversationsPagination;
 
     public ConversationsListResponseDto(List<ConversationDto> conversations) {
         this.conversations = conversations;
@@ -21,4 +27,14 @@ public class ConversationsListResponseDto {
         return conversations;
     }
 
+    /**
+     * @return the has more conversations flag for the next page
+     */
+    public ConversationsPaginationResponseDto getConversationsPagination() {
+        return conversationsPagination;
+    }
+
+    public void setConversationsPagination(ConversationsPaginationResponseDto conversationsPagination) {
+        this.conversationsPagination = conversationsPagination;
+    }
 }

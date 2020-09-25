@@ -10,7 +10,7 @@ import com.clarabridge.core.model.PostAuthorDto;
 import com.clarabridge.core.model.PostClientIdDto;
 import com.clarabridge.core.model.PostConsumeAuthCodeDto;
 import com.clarabridge.core.model.PostConversationActivityDto;
-import com.clarabridge.core.model.PostIntentDto;
+import com.clarabridge.core.model.PostCreateConversationDto;
 import com.clarabridge.core.model.PostLoginDto;
 import com.clarabridge.core.model.PostLogoutDto;
 import com.clarabridge.core.model.PostMessageDto;
@@ -20,6 +20,7 @@ import com.clarabridge.core.model.PostPostbackDto;
 import com.clarabridge.core.model.PostPushTokenDto;
 import com.clarabridge.core.model.PostStripeDto;
 import com.clarabridge.core.model.PostSubscribeDto;
+import com.clarabridge.core.model.PostUpdateConversationDto;
 import com.clarabridge.core.model.SdkUserDto;
 import com.clarabridge.core.model.StripeCustomerDto;
 import com.clarabridge.core.model.UpgradeDto;
@@ -33,6 +34,7 @@ import retrofit2.http.POST;
 import retrofit2.http.PUT;
 import retrofit2.http.Part;
 import retrofit2.http.Path;
+import retrofit2.http.Query;
 
 /**
  * A {@link retrofit2.Retrofit} interface used to make REST requests to the ClarabridgeChat API.
@@ -108,23 +110,31 @@ interface ClarabridgeChatApi {
             @Body PostSubscribeDto postSubscribeDto);
 
     @Headers("Content-Type:application/json")
-    @POST("v2/apps/{appId}/appusers/{appUserId}/conversation")
+    @POST("v2/apps/{appId}/appusers/{appUserId}/conversations")
     Call<ConversationResponseDto> createConversation(
             @Path("appId") String appId,
             @Path("appUserId") String appUserId,
-            @Body PostIntentDto postIntentDto);
+            @Body PostCreateConversationDto postIntentDto);
 
     @Headers("Content-Type:application/json")
     @GET("v2/apps/{appId}/appusers/{appUserId}/conversations")
     Call<ConversationsListResponseDto> getConversations(
             @Path("appId") String appId,
-            @Path("appUserId") String appUserId);
+            @Path("appUserId") String appUserId,
+            @Query("offset") int offset);
 
     @Headers("Content-Type:application/json")
     @GET("v2/apps/{appId}/conversations/{conversationId}")
     Call<ConversationResponseDto> getConversation(
             @Path("appId") String appId,
             @Path("conversationId") String conversationId);
+
+    @Headers("Content-Type:application/json")
+    @PUT("v2/apps/{appId}/conversations/{conversationId}")
+    Call<ConversationResponseDto> updateConversation(
+            @Path("appId") String appId,
+            @Path("conversationId") String conversationId,
+            @Body PostUpdateConversationDto postIntentDto);
 
     @Headers("Content-Type:application/json")
     @GET("v2/apps/{appId}/conversations/{conversationId}/messages")

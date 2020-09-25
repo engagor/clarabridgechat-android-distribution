@@ -1,6 +1,6 @@
 package com.clarabridge.core.network;
 
-import android.support.annotation.Nullable;
+import androidx.annotation.Nullable;
 
 import okhttp3.Response;
 

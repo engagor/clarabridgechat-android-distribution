@@ -1,6 +1,6 @@
 package com.clarabridge.core.service;
 
-import android.support.annotation.Nullable;
+import androidx.annotation.Nullable;
 
 import java.util.Collections;
 import java.util.List;
@@ -84,7 +84,7 @@ public class ConversationManager {
      * @param currentAppUserId      the ID of the current user
      * @param isConversationVisible if the conversation UI is currently visible
      */
-    void addMessageToConversationList(
+    boolean addMessageToConversationList(
             String conversationId,
             MessageDto message,
             String currentAppUserId,
@@ -102,14 +102,16 @@ public class ConversationManager {
             updateTimestampsAndUnreadCount(
                     conversation,
                     message.getReceived(),
-                    message.getAuthorId(),
+                    message.getUserId(),
                     currentAppUserId,
                     isConversationVisible);
 
             persistenceFacade.saveConversationsList(conversations);
 
-            return;
+            return true;
         }
+
+        return false;
     }
 
     /**
@@ -139,7 +141,7 @@ public class ConversationManager {
         updateTimestampsAndUnreadCount(
                 conversation,
                 message.getReceived(),
-                message.getAuthorId(),
+                message.getUserId(),
                 currentAppUserId,
                 isConversationVisible);
 
@@ -172,8 +174,8 @@ public class ConversationManager {
         }
 
         for (ParticipantDto participant : conversation.getParticipants()) {
-            boolean isAuthor = participant.getAppUserId().equals(authorAppUserId);
-            boolean isCurrentUser = participant.getAppUserId().equals(currentAppUserId);
+            boolean isAuthor = participant.getUserId().equals(authorAppUserId);
+            boolean isCurrentUser = participant.getUserId().equals(currentAppUserId);
 
             if (isAuthor || (isCurrentUser && isConversationVisible)) {
                 participant.setLastRead(newTimestamp);
@@ -187,23 +189,23 @@ public class ConversationManager {
     /**
      * Updates the persisted {@link ConversationDto} if it exists in {@link PersistenceFacade} to set
      * the unread count and the last read timestamp of the {@link ParticipantDto} whose ID matches
-     * the provided appUserId. This method should be used when a read event is received as it will
+     * the provided userId. This method should be used when a read event is received as it will
      * always set the unread count to 0.
      *
      * @param conversationId the ID of the {@link ConversationDto} to be updated
      * @param newTimestamp   the new timestamp to be set
-     * @param appUserId      the ID of the user to be updated
+     * @param userId         the ID of the user to be updated
      */
     void setParticipantLastRead(
             String conversationId,
             Double newTimestamp,
-            String appUserId) {
+            String userId) {
 
         List<ConversationDto> conversations = persistenceFacade.getConversationsList();
 
         for (ConversationDto conversation : conversations) {
             if (StringUtils.isNotNullAndEqual(conversation.getId(), conversationId)) {
-                setParticipantLastRead(conversation, newTimestamp, appUserId);
+                setParticipantLastRead(conversation, newTimestamp, userId);
                 persistenceFacade.saveConversationsList(conversations);
                 break;
             }
@@ -212,30 +214,30 @@ public class ConversationManager {
         ConversationDto savedConversation = persistenceFacade.getConversationById(conversationId);
 
         if (savedConversation != null) {
-            setParticipantLastRead(savedConversation, newTimestamp, appUserId);
+            setParticipantLastRead(savedConversation, newTimestamp, userId);
             persistenceFacade.saveConversationById(savedConversation.getId(), savedConversation);
         }
     }
 
     /**
      * Update the unread count and the last read timestamp of the {@link ParticipantDto} whose
-     * ID matches the provided appUserId.
+     * ID matches the provided userId.
      *
      * @param conversation the {@link ConversationDto} to be updated
      * @param newTimestamp the new timestamp to be set
-     * @param appUserId    the ID of the user to be updated
+     * @param userId    the ID of the user to be updated
      */
     private void setParticipantLastRead(
             ConversationDto conversation,
             Double newTimestamp,
-            String appUserId) {
+            String userId) {
 
         if (conversation.getParticipants() == null) {
             return;
         }
 
         for (ParticipantDto participant : conversation.getParticipants()) {
-            if (StringUtils.isNotNullAndEqual(participant.getAppUserId(), appUserId)) {
+            if (StringUtils.isNotNullAndEqual(participant.getUserId(), userId)) {
                 participant.setUnreadCount(0);
                 participant.setLastRead(newTimestamp);
                 return;
@@ -245,14 +247,14 @@ public class ConversationManager {
 
     /**
      * Updates the persisted {@link ConversationDto} if it exists in {@link PersistenceFacade} to set
-     * its {@link ConversationDto#setAppMakerLastRead(Double)} to the received value.
+     * its {@link ConversationDto#setBusinessLastRead(Double)} to the received value.
      * <p>
      * Both the list and the individual conversation storage will be updated.
      *
      * @param conversationId the ID of the {@link ConversationDto} to be updated
      * @param newTimestamp   the new timestamp to be set
      */
-    void setAppMakerLastRead(
+    void setBusinessLastRead(
             String conversationId,
             Double newTimestamp) {
 
@@ -260,7 +262,7 @@ public class ConversationManager {
 
         for (ConversationDto conversation : conversations) {
             if (StringUtils.isEqual(conversation.getId(), conversationId)) {
-                conversation.setAppMakerLastRead(newTimestamp);
+                conversation.setBusinessLastRead(newTimestamp);
                 persistenceFacade.saveConversationsList(conversations);
                 break;
             }
@@ -269,7 +271,7 @@ public class ConversationManager {
         ConversationDto savedConversation = persistenceFacade.getConversationById(conversationId);
 
         if (savedConversation != null) {
-            savedConversation.setAppMakerLastRead(newTimestamp);
+            savedConversation.setBusinessLastRead(newTimestamp);
             persistenceFacade.saveConversationById(savedConversation.getId(), savedConversation);
         }
     }

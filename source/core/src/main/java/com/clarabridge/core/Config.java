@@ -1,5 +1,7 @@
 package com.clarabridge.core;
 
+import androidx.annotation.Nullable;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
@@ -33,6 +35,42 @@ public class Config implements Serializable {
         }
 
         return false;
+    }
+
+    /**
+     * @return the icon url
+     */
+    @Nullable
+    public String getIconUrl() {
+        if (entity != null) {
+            if (entity.getApp() != null) {
+                return entity.getApp().getIconUrl();
+            }
+            return null;
+        }
+        return null;
+    }
+
+    /**
+     * String representing the name of the app
+     *
+     * @return the app name
+     */
+    public String getAppName() {
+        if (entity != null) {
+            if (entity.getApp() != null) {
+                return entity.getApp().getName();
+            }
+            return null;
+        }
+        return null;
+    }
+
+    /**
+     * @return the `canUserCreateMoreConversations` that is setting from the sdk server side.
+     */
+    public boolean canUserCreateMoreConversations() {
+        return entity.getConfigIntegrationDto().isCanUserCreateMoreConversations();
     }
 
     ConfigDto getEntity() {

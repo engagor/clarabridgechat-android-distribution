@@ -25,5 +25,7 @@
         <item>@string/ClarabridgeChat_settings_shareLocationMenuKey</item>
     </string-array>
     <item name="ClarabridgeChat_lineSpacingMultiplier" format="float" type="dimen">1.25</item>
+
+    <bool name="ClarabridgeChat_night_mode_enabled">false</bool>
 </resources>
 

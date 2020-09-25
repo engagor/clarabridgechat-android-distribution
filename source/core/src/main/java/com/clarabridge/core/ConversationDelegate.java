@@ -1,6 +1,6 @@
 package com.clarabridge.core;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import java.util.List;
 
@@ -18,11 +18,6 @@ public interface ConversationDelegate {
      * Identifies a delegate as belonging to the integrator
      */
     int INTEGRATOR_DELEGATE = 0;
-
-    /*
-     * Identifies a delegate as belonging to the SDK
-     */
-    int SDK_UI_DELEGATE = 1;
 
     /**
      * Notifies the delegate of new incoming messages.
@@ -154,9 +149,11 @@ public interface ConversationDelegate {
     void onClarabridgeChatHidden();
 
     /**
-     * Notifies the delegate when the conversations list was updated
+     * Notifies the delegate when the conversations list was updated.
+     * If you are building your own conversation list UI, implement this method to
+     * receive updates on any conversations in the list for this user
      *
-     * @param conversationsList the updated list of {@link Conversation}
+     * @param conversationsList an updated list of {@link Conversation}
      */
     void onConversationsListUpdated(@NonNull final List<Conversation> conversationsList);
 }

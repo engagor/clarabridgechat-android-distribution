@@ -8,8 +8,8 @@ import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Typeface;
 import android.os.Build;
-import android.support.annotation.NonNull;
-import android.support.v7.widget.RecyclerView;
+import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.RecyclerView;
 import android.text.SpannableString;
 import android.text.SpannableStringBuilder;
 import android.text.Spanned;
@@ -129,8 +129,8 @@ public class MessageListAdapter extends RecyclerView.Adapter implements MessageV
         boolean currentUser = false;
         String authorAvatarUrl;
         String authorName;
-        String authorId;
-        String authorRole;
+        String userId;
+        String userRole;
         Date date;
         boolean animate = false;
         boolean isFirstMessage = false;
@@ -147,8 +147,8 @@ public class MessageListAdapter extends RecyclerView.Adapter implements MessageV
             }
             return !StringUtils.isEqual(item.authorName, authorName)
                     || !StringUtils.isEqual(item.authorAvatarUrl, authorAvatarUrl)
-                    || !StringUtils.isEqual(item.authorRole, authorRole)
-                    || !StringUtils.isEqual(item.authorId, authorId);
+                    || !StringUtils.isEqual(item.userRole, userRole)
+                    || !StringUtils.isEqual(item.userId, userId);
         }
     }
 
@@ -253,8 +253,8 @@ public class MessageListAdapter extends RecyclerView.Adapter implements MessageV
         item.animate = true;
         item.authorAvatarUrl = conversationEvent.getAvatarUrl();
         item.authorName = conversationEvent.getName();
-        item.authorId = conversationEvent.getAppUserId();
-        item.authorRole = conversationEvent.getRole();
+        item.userId = conversationEvent.getUserId();
+        item.userRole = conversationEvent.getRole();
         item.currentUser = false;
         item.isTypingActivity = true;
         item.message = null;
@@ -1030,8 +1030,8 @@ public class MessageListAdapter extends RecyclerView.Adapter implements MessageV
         return new SpannableStringBuilder().append(timestamp).append(". ").append(boldSpannableString);
     }
 
-    private SpannableStringBuilder getSeenStatusText(Long appMakerLastRead, Resources resources) {
-        String relativeTimestamp = getRelativeTimestampText(appMakerLastRead, resources);
+    private SpannableStringBuilder getSeenStatusText(Long businessLastRead, Resources resources) {
+        String relativeTimestamp = getRelativeTimestampText(businessLastRead, resources);
 
         String status = resources.getString(R.string.ClarabridgeChat_messageStatusSeen);
 
@@ -1072,8 +1072,8 @@ public class MessageListAdapter extends RecyclerView.Adapter implements MessageV
         item.currentUser = message.isFromCurrentUser();
         item.authorAvatarUrl = message.getAvatarUrl();
         item.authorName = message.getName();
-        item.authorId = message.getAuthorId();
-        item.authorRole = message.getAuthorRole();
+        item.userId = message.getUserId();
+        item.userRole = message.getUserRole();
         item.date = message.getDate();
         item.animate = animationState == AnimationState.ENABLED;
         item.shouldShowAuthorName = true;

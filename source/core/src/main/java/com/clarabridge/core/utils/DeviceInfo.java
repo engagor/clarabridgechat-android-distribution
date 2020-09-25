@@ -2,7 +2,7 @@ package com.clarabridge.core.utils;
 
 import android.content.Context;
 import android.os.Build;
-import android.support.annotation.Nullable;
+import androidx.annotation.Nullable;
 import android.telephony.TelephonyManager;
 
 import javax.inject.Inject;

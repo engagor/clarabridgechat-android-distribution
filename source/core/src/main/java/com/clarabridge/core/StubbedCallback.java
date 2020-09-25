@@ -1,7 +1,7 @@
 package com.clarabridge.core;
 
-import android.support.annotation.NonNull;
-import android.support.annotation.RestrictTo;
+import androidx.annotation.NonNull;
+import androidx.annotation.RestrictTo;
 
 /**
  * Stubbed implementation of {@link ClarabridgeChatCallback} that does nothing when invoked

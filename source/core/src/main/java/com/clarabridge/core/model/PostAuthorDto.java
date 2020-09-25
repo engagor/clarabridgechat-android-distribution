@@ -28,7 +28,7 @@ public class PostAuthorDto {
         return client;
     }
 
-    public String getAppUserId() {
+    public String getUserId() {
         return appUserId;
     }
 

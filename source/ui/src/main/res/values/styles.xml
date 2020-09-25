@@ -1,13 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="Theme.ClarabridgeChat" parent="@style/Theme.AppCompat.Light.DarkActionBar">
+    <style name="Theme.ClarabridgeChat" parent="@style/Theme.AppCompat.Light">
         <item name="windowActionBarOverlay">true</item>
         <item name="android:windowActionBarOverlay">true</item>
-        <item name="actionBarStyle">@style/Theme.ClarabridgeChat.ActionBar</item>
+        <item name="actionBarStyle">@style/Theme.ClarabridgeChat.ActionBar.Style</item>
+        <item name="actionBarTheme">@style/Theme.ClarabridgeChat.ActionBar.Theme</item>
         <item name="colorAccent">@color/ClarabridgeChat_accent</item>
         <item name="colorPrimary">@color/ClarabridgeChat_accent</item>
-        <item name="colorPrimaryDark">@color/ClarabridgeChat_accentDark</item>
+        <item name="colorPrimaryDark">@color/ClarabridgeChat_statusBarColor</item>
+    </style>
+
+    <style name="Theme.ClarabridgeChat.Dialog" parent="Theme.AppCompat.DayNight.Dialog.Alert">
+        <item name="android:textColor">@color/ClarabridgeChat_actionBarTextColor</item>
+        <item name="android:background">@color/ClarabridgeChat_actionBarColor</item>
     </style>
 
     <style name="Theme.ClarabridgeChat.NoActionBar" parent="@style/Theme.ClarabridgeChat">
@@ -15,8 +21,26 @@
         <item name="windowActionBar">false</item>
     </style>
 
-    <style name="Theme.ClarabridgeChat.ActionBar" parent="@style/Widget.AppCompat.Light.ActionBar.Solid.Inverse">
-        <item name="background">@color/ClarabridgeChat_accent</item>
+    <style name="Theme.ClarabridgeChat.ActionBar.Style" parent="@style/Widget.AppCompat.Light.ActionBar.Solid.Inverse">
+        <item name="background">@color/ClarabridgeChat_actionBarColor</item>
+        <item name="android:titleTextStyle">@style/Theme.ClarabridgeChat.ActionBar.TitleTextStyle</item>
+        <item name="titleTextStyle">@style/Theme.ClarabridgeChat.ActionBar.TitleTextStyle</item>
+        <item name="android:subtitleTextStyle">@style/Theme.ClarabridgeChat.ActionBar.SubTitleTextStyle</item>
+        <item name="subtitleTextStyle">@style/Theme.ClarabridgeChat.ActionBar.SubTitleTextStyle</item>
+    </style>
+
+    <style name="Theme.ClarabridgeChat.ActionBar.Theme" parent="@style/ThemeOverlay.AppCompat.ActionBar">
+        <item name="colorControlNormal">@color/ClarabridgeChat_actionBarTextColor</item>
+    </style>
+
+    <style name="Theme.ClarabridgeChat.ActionBar.TitleTextStyle" parent="@style/TextAppearance.AppCompat.Widget.ActionBar.Title">
+        <item name="android:textColor">@color/ClarabridgeChat_actionBarTextColor</item>
+        <item name="android:textSize">@dimen/ClarabridgeChat_actionBarTitleText</item>
+    </style>
+
+    <style name="Theme.ClarabridgeChat.ActionBar.SubTitleTextStyle"
+        parent="@style/TextAppearance.AppCompat.Widget.ActionBar.Subtitle">
+        <item name="android:textColor">@color/ClarabridgeChat_actionBarTextColor</item>
     </style>
 
     <style name="Theme.AppCompat.NoActionBar.FullScreen" parent="@style/Theme.AppCompat">

@@ -1,7 +1,7 @@
 package com.clarabridge.core.model;
 
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.google.gson.annotations.SerializedName;
 
@@ -21,7 +21,11 @@ public class ConversationDto implements Serializable, Comparable<ConversationDto
     @Nullable
     private String displayName;
     @Nullable
-    private Double appMakerLastRead;
+    private String description;
+    @Nullable
+    private String iconUrl;
+    @Nullable
+    private Double businessLastRead;
     private boolean isDefault;
     private Double lastUpdatedAt;
     @Nullable
@@ -35,7 +39,9 @@ public class ConversationDto implements Serializable, Comparable<ConversationDto
     public void update(@NonNull final ConversationDto rhs) {
         this.id = rhs.id;
         this.displayName = rhs.displayName;
-        this.appMakerLastRead = rhs.appMakerLastRead;
+        this.description = rhs.description;
+        this.iconUrl = rhs.iconUrl;
+        this.businessLastRead = rhs.businessLastRead;
         this.isDefault = rhs.isDefault;
         this.lastUpdatedAt = rhs.lastUpdatedAt;
         this.metadata = rhs.metadata;
@@ -91,12 +97,30 @@ public class ConversationDto implements Serializable, Comparable<ConversationDto
     }
 
     @Nullable
-    public Double getAppMakerLastRead() {
-        return appMakerLastRead;
+    public String getDescription() {
+        return description;
     }
 
-    public void setAppMakerLastRead(@Nullable Double appMakerLastRead) {
-        this.appMakerLastRead = appMakerLastRead;
+    public void setDescription(@Nullable String description) {
+        this.description = description;
+    }
+
+    @Nullable
+    public String getIconUrl() {
+        return iconUrl;
+    }
+
+    public void setIconUrl(@Nullable String iconUrl) {
+        this.iconUrl = iconUrl;
+    }
+
+    @Nullable
+    public Double getBusinessLastRead() {
+        return businessLastRead;
+    }
+
+    public void setBusinessLastRead(@Nullable Double businessLastRead) {
+        this.businessLastRead = businessLastRead;
     }
 
     public boolean getDefault() {
@@ -172,7 +196,9 @@ public class ConversationDto implements Serializable, Comparable<ConversationDto
             messages = Collections.synchronizedList(new ArrayList<MessageDto>());
         }
 
-        messages.addAll(messagesToAdd);
+        if (messagesToAdd != null) {
+            messages.addAll(messagesToAdd);
+        }
     }
 
     public void setMessages(final List<MessageDto> messages) {
@@ -182,18 +208,18 @@ public class ConversationDto implements Serializable, Comparable<ConversationDto
     }
 
     /**
-     * Returns the unread count of the {@link ParticipantDto} with the same appUserId.
+     * Returns the unread count of the {@link ParticipantDto} with the same userId.
      *
-     * @param appUserId the ID of the user
+     * @param userId the ID of the user
      * @return the unread count if found, 0 otherwise
      */
-    public int getUnreadCount(String appUserId) {
-        if (appUserId == null || participants == null) {
+    public int getUnreadCount(String userId) {
+        if (userId == null || participants == null) {
             return 0;
         }
 
         for (ParticipantDto participant : participants) {
-            if (StringUtils.isNotNullAndEqual(participant.getAppUserId(), appUserId)) {
+            if (StringUtils.isNotNullAndEqual(participant.getUserId(), userId)) {
                 return participant.getUnreadCount();
             }
         }
@@ -206,16 +232,16 @@ public class ConversationDto implements Serializable, Comparable<ConversationDto
      * any other participant participant of the conversation. The provided app user id is used
      * to identify the current user.
      *
-     * @param appUserId the current user ID
+     * @param userId the current user ID
      * @return the timestamp if one exists, null otherwise
      */
     @NonNull
-    public Double getLastRead(String appUserId) {
-        Double maxLastRead = appMakerLastRead != null ? appMakerLastRead : 0;
+    public Double getLastRead(String userId) {
+        Double maxLastRead = businessLastRead != null ? businessLastRead : 0;
 
         if (participants != null) {
             for (ParticipantDto participant : participants) {
-                if (StringUtils.isNotNullAndNotEqual(participant.getAppUserId(), appUserId)) {
+                if (StringUtils.isNotNullAndNotEqual(participant.getUserId(), userId)) {
                     Double participantLastRead = participant.getLastRead() != null
                             ? participant.getLastRead()
                             : 0;
@@ -250,9 +276,9 @@ public class ConversationDto implements Serializable, Comparable<ConversationDto
         if (displayName != null ? !displayName.equals(that.displayName) : that.displayName != null) {
             return false;
         }
-        if (appMakerLastRead != null
-                ? !appMakerLastRead.equals(that.appMakerLastRead)
-                : that.appMakerLastRead != null) {
+        if (businessLastRead != null
+                ? !businessLastRead.equals(that.businessLastRead)
+                : that.businessLastRead != null) {
             return false;
         }
         if (lastUpdatedAt != null ? !lastUpdatedAt.equals(that.lastUpdatedAt) : that.lastUpdatedAt != null) {
@@ -274,7 +300,7 @@ public class ConversationDto implements Serializable, Comparable<ConversationDto
     public int hashCode() {
         int result = id != null ? id.hashCode() : 0;
         result = 31 * result + (displayName != null ? displayName.hashCode() : 0);
-        result = 31 * result + (appMakerLastRead != null ? appMakerLastRead.hashCode() : 0);
+        result = 31 * result + (businessLastRead != null ? businessLastRead.hashCode() : 0);
         result = 31 * result + (isDefault ? 1 : 0);
         result = 31 * result + (lastUpdatedAt != null ? lastUpdatedAt.hashCode() : 0);
         result = 31 * result + (metadata != null ? metadata.hashCode() : 0);

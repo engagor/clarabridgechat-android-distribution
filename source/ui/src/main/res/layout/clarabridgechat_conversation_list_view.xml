@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/ClarabridgeChat_conversationListBackground">
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/clarabridgechat_conversation_list_recycler_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:clipToPadding="false"
+        android:scrollbars="vertical"
+        tools:listitem="@layout/clarabridgechat_conversations_list_item" />
+
+    <ProgressBar
+        android:id="@+id/clarabridgechat_conversation_list_loading_spinner"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:layout_gravity="center"
+        android:indeterminate="true"
+        android:visibility="gone"
+        tools:visibility="visible" />
+
+    <TextView
+        android:id="@+id/clarabridgechat_conversation_list_empty_state_text_view"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:gravity="center"
+        android:text="@string/ClarabridgeChat_conversationListEmpty"
+        android:textColor="@color/ClarabridgeChat_conversationListTextColor"
+        android:textSize="16sp"
+        android:visibility="gone"
+        tools:visibility="visible" />
+
+    <LinearLayout
+        android:id="@+id/clarabridgechat_conversation_list_error_state_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top"
+        android:layout_margin="12dp"
+        android:background="@drawable/clarabridgechat_background_error_banner"
+        android:elevation="4dp"
+        android:gravity="center"
+        android:orientation="horizontal"
+        android:visibility="gone"
+        tools:ignore="UnusedAttribute"
+        tools:visibility="visible">
+
+        <TextView
+            android:id="@+id/clarabridgechat_conversation_list_error_text_view"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:layout_marginStart="16dp"
+            android:layout_marginLeft="16dp"
+            android:layout_marginTop="6dp"
+            android:layout_marginBottom="6dp"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="@string/ClarabridgeChat_conversationListError"
+            android:textColor="@color/ClarabridgeChat_conversationListErrorTextColor"
+            android:textSize="14sp" />
+
+        <ImageView
+            android:id="@+id/clarabridgechat_conversation_list_error_retry"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:layout_marginStart="0dp"
+            android:layout_marginLeft="0dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginEnd="16dp"
+            android:layout_marginRight="16dp"
+            android:layout_marginBottom="8dp"
+            android:gravity="center"
+            android:src="@drawable/clarabridgechat_ic_refresh"
+            app:tint="@color/ClarabridgeChat_conversationListErrorRetryIconColor"
+            tools:ignore="ContentDescription" />
+
+    </LinearLayout>
+
+    <Button
+        android:id="@+id/clarabridgechat_new_conversation_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|center_horizontal"
+        android:layout_marginBottom="18dp"
+        android:background="@drawable/clarabridgechat_btn_new_conversation"
+        android:drawableStart="@drawable/ic_new_conversation"
+        android:drawableLeft="@drawable/ic_new_conversation"
+        android:drawablePadding="10dp"
+        android:orientation="horizontal"
+        android:paddingStart="24dp"
+        android:paddingTop="14dp"
+        android:paddingEnd="24dp"
+        android:paddingBottom="14dp"
+        android:text="@string/ClarabridgeChat_btnNewConversation"
+        android:textColor="@color/ClarabridgeChat_btnNewConversationTextColor" />
+
+</FrameLayout>

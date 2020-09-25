@@ -18,6 +18,8 @@ public class AppDto implements Serializable {
     private String name;
     @SerializedName("settings")
     private AppSettingsDto settings;
+    @SerializedName("iconUrl")
+    private String iconUrl;
 
     public String getId() {
         return id;
@@ -41,6 +43,14 @@ public class AppDto implements Serializable {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getIconUrl() {
+        return iconUrl;
+    }
+
+    public void setIconUrl(String iconUrl) {
+        this.iconUrl = iconUrl;
     }
 
     public AppSettingsDto getSettings() {

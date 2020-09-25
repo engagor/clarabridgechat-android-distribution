@@ -19,8 +19,13 @@
 # Common attributes
 -keepattributes Signature, Exceptions, InnerClasses, EnclosingMethod, *Annotation*
 
+# com.clarabridge.core
+-keep public interface com.clarabridge.core.ClarabridgeChatCallback { public *; }
+-keep public class com.clarabridge.core.ClarabridgeChatCallback$Response { public *; }
+
 # com.clarabridge.ui
 -keep public class com.clarabridge.ui.** { *; }
+-keep public class com.clarabridge.features.** { *; }
 -dontnote com.clarabridge.**
 
 # Glide

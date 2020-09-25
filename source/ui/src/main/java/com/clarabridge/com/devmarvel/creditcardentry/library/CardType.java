@@ -1,6 +1,6 @@
 package com.clarabridge.com.devmarvel.creditcardentry.library;
 
-import android.support.annotation.DrawableRes;
+import androidx.annotation.DrawableRes;
 
 import java.io.Serializable;
 

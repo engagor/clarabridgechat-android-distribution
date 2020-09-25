@@ -1,7 +1,7 @@
 package com.clarabridge.core.utils;
 
-import android.support.annotation.Nullable;
-import android.support.annotation.VisibleForTesting;
+import androidx.annotation.Nullable;
+import androidx.annotation.VisibleForTesting;
 
 import javax.inject.Inject;
 

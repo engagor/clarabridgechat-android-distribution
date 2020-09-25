@@ -1,7 +1,7 @@
 package com.clarabridge.core;
 
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -61,8 +61,26 @@ abstract class ConversationBase implements Conversation {
      */
     @Nullable
     @Override
-    public final Date getAppMakerLastRead() {
-        return DateUtils.timestampToDate(entity.getAppMakerLastRead());
+    public String getDescription() {
+        return entity.getDescription();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Nullable
+    @Override
+    public String getIconUrl() {
+        return entity.getIconUrl();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Nullable
+    @Override
+    public final Date getBusinessLastRead() {
+        return DateUtils.timestampToDate(entity.getBusinessLastRead());
     }
 
     /**
@@ -115,7 +133,7 @@ abstract class ConversationBase implements Conversation {
             return 0;
         }
 
-        return entity.getUnreadCount(ClarabridgeChat.getInstance().getAppUserId());
+        return entity.getUnreadCount(ClarabridgeChat.getInstance().getUserId());
     }
 
     /**
@@ -128,7 +146,7 @@ abstract class ConversationBase implements Conversation {
             return null;
         }
 
-        return DateUtils.timestampToDate(entity.getLastRead(ClarabridgeChat.getInstance().getAppUserId()));
+        return DateUtils.timestampToDate(entity.getLastRead(ClarabridgeChat.getInstance().getUserId()));
     }
 
     @Override

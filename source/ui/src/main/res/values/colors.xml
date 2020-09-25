@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="ClarabridgeChat_accent">#9200aa</color>
+    <color name="ClarabridgeChat_accent">#0072EE</color>
     <color name="ClarabridgeChat_accentDark">#76008a</color>
     <color name="ClarabridgeChat_accentDarker">#66008a</color>
     <color name="ClarabridgeChat_accentLight">#be7cca</color>
-    <color name="ClarabridgeChat_accentFailure">#c178cd</color>
+    <color name="ClarabridgeChat_accentFailure">#800072EE</color>
 
     <color name="ClarabridgeChat_btnSendHollow">#7fc0c0c0</color>
     <color name="ClarabridgeChat_btnSendHollowBorder">#c0c0c0</color>
@@ -21,10 +21,17 @@
 
     <color name="ClarabridgeChat_messageDate">@color/ClarabridgeChat_header</color>
 
-    <color name="ClarabridgeChat_conversationBackground">#ecebeb</color>
+    <color name="ClarabridgeChat_conversationBackground">#ffffff</color>
+    <color name="ClarabridgeChat_conversationListBackground">#ffffff</color>
+    <color name="ClarabridgeChat_conversationListTextColor">#99000000</color>
+    <color name="ClarabridgeChat_conversationListTitleTextColor">#DE000000</color>
+    <color name="ClarabridgeChat_conversationListErrorTextColor">#ffffff</color>
+    <color name="ClarabridgeChat_conversationListErrorBackgroundColor">#212b35</color>
+    <color name="ClarabridgeChat_conversationListErrorRetryIconColor">#ffffff</color>
+    <color name="ClarabridgeChat_conversationListTitleTimestampTextColor">#99000000</color>
 
     <color name="ClarabridgeChat_remoteMessageAuthor">@color/ClarabridgeChat_header</color>
-    <color name="ClarabridgeChat_remoteMessageBackground">#ffffff</color>
+    <color name="ClarabridgeChat_remoteMessageBackground">#ecebeb</color>
     <color name="ClarabridgeChat_remoteMessageBorder">#d9d9d9</color>
     <color name="ClarabridgeChat_remoteMessageText">#212121</color>
 
@@ -36,6 +43,16 @@
     <color name="ClarabridgeChat_userMessageFailedBorder">@color/ClarabridgeChat_accentFailure</color>
     <color name="ClarabridgeChat_userMessageText">#ffffff</color>
     <color name="ClarabridgeChat_descriptionText">#FFC0C0C0</color>
+    <color name="ClarabridgeChat_unreadBadge">@color/ClarabridgeChat_accent</color>
+    <color name="ClarabridgeChat_unreadBadgeText">#ffffff</color>
+    <color name="ClarabridgeChat_statusBarColor">#C6C6C6</color>
+    <color name="ClarabridgeChat_actionBarColor">#ffffff</color>
+    <color name="ClarabridgeChat_actionBarTextColor">#000000</color>
+    <color name="ClarabridgeChat_errorSnackbarBackgroundColor">#ff222222</color>
+
+    <color name="ClarabridgeChat_btnNewConversationBackground">@color/ClarabridgeChat_accent</color>
+    <color name="ClarabridgeChat_btnNewConversationTextColor">#ffffff</color>
+    <color name="ClarabridgeChat_btnNewConversationIconColor">#ffffff</color>
 
     <color name="text_helper_color">#a8a8a8</color>
     <color name="text_failure_color">#ff2851</color>

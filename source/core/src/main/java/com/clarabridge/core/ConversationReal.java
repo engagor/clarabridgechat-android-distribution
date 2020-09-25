@@ -1,10 +1,12 @@
 package com.clarabridge.core;
 
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.annotation.VisibleForTesting;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.VisibleForTesting;
 import android.util.Log;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -242,12 +244,21 @@ class ConversationReal extends ConversationBase implements ConversationObserver 
      */
     @Override
     public void triggerAction(MessageAction action) {
+        //get the integrator delegate
         ConversationDelegate conversationDelegate = ClarabridgeChat.getConversationDelegate();
-        ConversationDelegate conversationUiDelegate = ClarabridgeChat.getConversationUiDelegate();
 
+        //if the integrator delegate returns true for shouldTriggerAction we need to call all the
+        //ui delegates
         if (conversationDelegate == null || conversationDelegate.shouldTriggerAction(action)) {
-            if (conversationUiDelegate != null) {
-                conversationUiDelegate.shouldTriggerAction(action);
+
+            //remove the integrator delegate from the list of all delegates
+            Collection<ConversationDelegate> conversationDelegates = new ArrayList<>(ClarabridgeChat.getConversationDelegates());
+            conversationDelegates.remove(conversationDelegate);
+
+            for (ConversationDelegate delegate : conversationDelegates) {
+                if (delegate != null) {
+                    delegate.shouldTriggerAction(action);
+                }
             }
         }
     }

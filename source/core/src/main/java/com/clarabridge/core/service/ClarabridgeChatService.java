@@ -10,10 +10,12 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Handler;
 import android.os.IBinder;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.annotation.VisibleForTesting;
 import android.util.Log;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.VisibleForTesting;
+import androidx.core.net.ConnectivityManagerCompat;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
@@ -33,6 +35,7 @@ import java.util.Map;
 import java.util.Random;
 
 import com.clarabridge.core.AuthenticationCallback;
+import com.clarabridge.core.AuthenticationDelegate;
 import com.clarabridge.core.BuildConfig;
 import com.clarabridge.core.ConversationEventType;
 import com.clarabridge.core.CreditCard;
@@ -62,6 +65,8 @@ import com.clarabridge.core.model.GetConfigDto;
 import com.clarabridge.core.model.IntegrationDto;
 import com.clarabridge.core.model.MessageActionDto;
 import com.clarabridge.core.model.MessageDto;
+import com.clarabridge.core.model.PostAppUserConversationDto;
+import com.clarabridge.core.model.PostConversationMessageDto;
 import com.clarabridge.core.model.PostMessageDto;
 import com.clarabridge.core.model.RetryConfigurationDto;
 import com.clarabridge.core.model.SdkUserDto;
@@ -93,7 +98,7 @@ public class ClarabridgeChatService extends Service implements ConversationMonit
                 onInitFailure(
                         response.getStatus(),
                         loginOnInitTask,
-                        "Error logging in. Make sure userId and JWT are valid"
+                        "Error logging in. Make sure externalId and JWT are valid"
                 );
             }
         }
@@ -115,7 +120,7 @@ public class ClarabridgeChatService extends Service implements ConversationMonit
     private final Runnable loginOnInitTask = new Runnable() {
         @Override
         public void run() {
-            login(appUserRemote.getUserId(), persistenceFacade.getJwt(), loginOnInitCallback, false);
+            login(appUserRemote.getExternalId(), persistenceFacade.getJwt(), loginOnInitCallback, false);
         }
     };
 
@@ -167,7 +172,7 @@ public class ClarabridgeChatService extends Service implements ConversationMonit
     private final BroadcastReceiver connectivityReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(final Context context, final Intent intent) {
-            updateConnectionStatus();
+            updateConnectionStatus(ConnectivityManagerCompat.getNetworkInfoFromBroadcast(connectivityManager, intent));
         }
     };
 
@@ -197,6 +202,7 @@ public class ClarabridgeChatService extends Service implements ConversationMonit
 
     private ServiceSettings serviceSettings;
     private ClarabridgeChatApiClient clarabridgeChatApiClient;
+    private AuthenticationDelegate authenticationDelegate;
     private PersistenceFacade persistenceFacade;
     private ConversationManager conversationManager;
     private Settings settings;
@@ -216,10 +222,12 @@ public class ClarabridgeChatService extends Service implements ConversationMonit
     private LoginResult lastLoginResult;
     private Long lastStartTypingEvent;
     private Long lastUploadedStartTypingEvent;
+    private ConnectivityManager connectivityManager;
 
     @Override
     public void onCreate() {
         super.onCreate();
+        connectivityManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
         registerReceiver(connectivityReceiver, new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION));
     }
 
@@ -250,7 +258,7 @@ public class ClarabridgeChatService extends Service implements ConversationMonit
 
     @VisibleForTesting
     boolean shouldStartConversationMonitor() {
-        boolean userExists = getAppUserId() != null;
+        boolean userExists = getUserId() != null;
 
         boolean isRealtimeEnabled = userSettings != null
                 && userSettings.getRealtime() != null
@@ -272,11 +280,12 @@ public class ClarabridgeChatService extends Service implements ConversationMonit
 
                 conversationMonitor = new ConversationMonitorBuilder()
                         .setAppId(persistenceFacade.getAppId())
-                        .setAppUserId(getAppUserId())
+                        .setUserId(getUserId())
                         .setClientId(serviceSettings.getClientId())
                         .setDelegate(this)
-                        .setJwt(persistenceFacade.getJwt())
                         .setSessionToken(sessionToken)
+                        .setAuthenticationDelegate(authenticationDelegate)
+                        .setPersistenceFacade(persistenceFacade)
                         .setHost(userSettings.getRealtime().getBaseUrl())
                         .setMaxConnectionAttempts(userSettings.getRealtime().getMaxConnectionAttempts())
                         .setRetryInterval(userSettings.getRealtime().getRetryInterval() * 1000)
@@ -301,7 +310,7 @@ public class ClarabridgeChatService extends Service implements ConversationMonit
 
     @Override
     public void onMessageReceived(String conversationId, final MessageDto message) {
-        final boolean isFromCurrentUser = StringUtils.isEqual(getAppUserId(), message.getAuthorId());
+        final boolean isFromCurrentUser = StringUtils.isEqual(getUserId(), message.getUserId());
         final boolean isCurrentConversation = StringUtils.isEqual(getConversationId(), conversationId);
         final boolean isConversationVisible = isCurrentConversation
                 && ClarabridgeChat.getConversation() != null
@@ -310,20 +319,31 @@ public class ClarabridgeChatService extends Service implements ConversationMonit
 
         message.setIsFromCurrentUser(isFromCurrentUser);
 
-        conversationManager.addMessageToConversationList(
+        boolean isMessageAddedToConversationList = conversationManager.addMessageToConversationList(
                 conversationId,
                 message,
-                getAppUserId(),
+                getUserId(),
                 isConversationVisible);
 
-        clarabridgeChatObserver.onConversationsListUpdated(persistenceFacade.getConversationsList());
+        if (isMessageAddedToConversationList) {
+            clarabridgeChatObserver.onConversationsListUpdated(persistenceFacade.getConversationsList());
+        } else {
+            refreshConversationList(0, false, new ClarabridgeChatCallback<List<ConversationDto>>() {
+                @Override
+                public void run(@NonNull Response<List<ConversationDto>> response) {
+                    if (response.getData() != null && !response.getData().isEmpty()) {
+                        clarabridgeChatObserver.onConversationsListUpdated(persistenceFacade.getConversationsList());
+                    }
+                }
+            });
+        }
 
         if (!isCurrentConversation) {
             if (isConversationUpToDate) {
                 conversationManager.addMessageToConversation(
                         conversationId,
                         message,
-                        getAppUserId(),
+                        getUserId(),
                         false);
             }
 
@@ -338,7 +358,7 @@ public class ClarabridgeChatService extends Service implements ConversationMonit
             conversationManager.addMessageToConversation(
                     conversationId,
                     message,
-                    getAppUserId(),
+                    getUserId(),
                     isConversationVisible);
 
             if (!isFromCurrentUser) {
@@ -414,7 +434,7 @@ public class ClarabridgeChatService extends Service implements ConversationMonit
      */
     @Override
     public void onUploadComplete(final MessageDto message) {
-        message.setIsFromCurrentUser(StringUtils.isEqual(message.getAuthorId(), getAppUserId()));
+        message.setIsFromCurrentUser(StringUtils.isEqual(message.getUserId(), getUserId()));
         synchronized (conversation.getMessages()) {
             for (MessageDto entity : conversation.getMessages()) {
                 if (entity.equals(message)) {
@@ -452,20 +472,39 @@ public class ClarabridgeChatService extends Service implements ConversationMonit
                 updateLastRead(event);
                 break;
             case CONVERSATION_REMOVED:
-                refreshConversationList();
+                persistenceFacade.removeConversationFromConversationList(event.getConversationId());
                 persistenceFacade.saveConversationById(event.getConversationId(), null);
-                // That's everything for now. If that conversation was currently loaded or
-                // displayed in the UI it will remain there until another conversation is loaded
-                // and any calls will result in an error
+                clarabridgeChatObserver.onConversationsListUpdated(persistenceFacade.getConversationsList());
                 break;
             case CONVERSATION_ADDED:
+                final String convoId = event.getConversationId();
+                //noinspection ConstantConditions
+                if (convoId != null) {
+                    fetchConversationFromNetwork(convoId, new ClarabridgeChatCallback<ConversationDto>() {
+                        @Override
+                        public void run(@NonNull Response<ConversationDto> response) {
+                            final ConversationDto conversationDto = response.getData();
+                            if (conversationDto != null) {
+                                persistenceFacade.addConversation(convoId, response.getData());
+                                clarabridgeChatObserver.onConversationsListUpdated(persistenceFacade.getConversationsList());
+                            }
+                        }
+                    });
+                }
+                break;
             case PARTICIPANT_ADDED:
             case PARTICIPANT_REMOVED:
-                refreshConversationList();
+                refreshConversationList(0, false, new ClarabridgeChatCallback<List<ConversationDto>>() {
+                    @Override
+                    public void run(@NonNull Response<List<ConversationDto>> response) {
+                        if (response.getData() != null && !response.getData().isEmpty()) {
+                            clarabridgeChatObserver.onConversationsListUpdated(persistenceFacade.getConversationsList());
+                        }
+                    }
+                });
                 if (StringUtils.isEqual(event.getConversationId(), getConversationId())) {
                     refreshConversation(null);
                 }
-
                 break;
             case TYPING_START:
             case TYPING_STOP:
@@ -500,8 +539,8 @@ public class ClarabridgeChatService extends Service implements ConversationMonit
         }
 
         switch (role) {
-            case APP_MAKER:
-                conversationManager.setAppMakerLastRead(
+            case BUSINESS:
+                conversationManager.setBusinessLastRead(
                         event.getConversationId(),
                         event.getLastRead());
                 break;
@@ -509,7 +548,7 @@ public class ClarabridgeChatService extends Service implements ConversationMonit
                 conversationManager.setParticipantLastRead(
                         event.getConversationId(),
                         event.getLastRead(),
-                        event.getAppUserId());
+                        event.getUserId());
                 break;
         }
 
@@ -568,6 +607,7 @@ public class ClarabridgeChatService extends Service implements ConversationMonit
         retryConfiguration = persistenceFacade.getRetryConfiguration();
 
         clarabridgeChatApiClient = clarabridgeChatComponent.clarabridgeChatApiClient();
+        authenticationDelegate = clarabridgeChatComponent.authenticationDelegate();
         clarabridgeChatApiClient.setAuthenticationCallback(new AuthenticationCallback() {
             @Override
             public void updateToken(@NonNull String jwt) {
@@ -654,7 +694,7 @@ public class ClarabridgeChatService extends Service implements ConversationMonit
                 return;
             }
 
-            boolean userExists = getAppUserId() != null;
+            boolean userExists = getUserId() != null;
 
             boolean isRealtimeEnabled = userSettings != null
                     && userSettings.getRealtime() != null
@@ -883,16 +923,13 @@ public class ClarabridgeChatService extends Service implements ConversationMonit
         clarabridgeChatApiClient.upgradeAppUser(
                 serviceSettings.getLegacyDeviceId(),
                 new ClarabridgeChatApiClientCallback<UpgradeDto>() {
-
                     @Override
                     public void onResult(boolean isSuccessful, int statusCode, @Nullable UpgradeDto responseBody) {
                         if (isSuccessful) {
-                            if (responseBody == null || responseBody.getAppUser() == null) {
-                                onUpgradeComplete();
-                            } else {
+                            if (responseBody != null && responseBody.getAppUser() != null) {
                                 upgradeUser(responseBody.getAppUser());
-                                onUpgradeComplete();
                             }
+                            onUpgradeComplete();
                         } else {
                             if (isRetryableStatusCode(statusCode) && retryCount < retryConfiguration.getMaxRetries()) {
                                 onInitFailure(statusCode, upgradeTask, null);
@@ -910,7 +947,7 @@ public class ClarabridgeChatService extends Service implements ConversationMonit
             appUserRemote = new AppUserDto();
         }
 
-        appUserRemote.setAppUserId(upgradedAppUser.getAppUserId());
+        appUserRemote.setUserId(upgradedAppUser.getUserId());
         sessionToken = upgradedAppUser.getSessionToken();
 
         sync();
@@ -926,7 +963,7 @@ public class ClarabridgeChatService extends Service implements ConversationMonit
 
     private void completeInitialization() {
         if (isAuthenticatedUser()) {
-            login(appUserRemote.getUserId(), persistenceFacade.getJwt(), loginOnInitCallback, false);
+            login(appUserRemote.getExternalId(), persistenceFacade.getJwt(), loginOnInitCallback, false);
         } else if (isAnonymousUser()) {
             fetchUser();
         } else {
@@ -935,10 +972,10 @@ public class ClarabridgeChatService extends Service implements ConversationMonit
     }
 
     private boolean isAuthenticatedUser() {
-        return appUserRemote != null && appUserRemote.getUserId() != null && persistenceFacade.getJwt() != null;
+        return appUserRemote != null && appUserRemote.getExternalId() != null && persistenceFacade.getJwt() != null;
     }
 
-    public void login(@NonNull final String userId,
+    public void login(@NonNull final String externalId,
                       @NonNull final String jwt,
                       @NonNull final ClarabridgeChatCallback<LoginResult> callback,
                       final boolean shouldNotifyDelegate) {
@@ -950,7 +987,7 @@ public class ClarabridgeChatService extends Service implements ConversationMonit
                     appUserRemote = new AppUserDto();
                 }
 
-                appUserRemote.setUserId(userId);
+                appUserRemote.setExternalId(externalId);
 
                 disconnectConversationMonitor();
 
@@ -959,8 +996,8 @@ public class ClarabridgeChatService extends Service implements ConversationMonit
                 }
 
                 clarabridgeChatApiClient.login(
-                        appUserRemote.getAppUserId(),
                         appUserRemote.getUserId(),
+                        appUserRemote.getExternalId(),
                         sessionToken,
                         new ClarabridgeChatApiClientCallback<SdkUserDto>() {
                             @Override
@@ -981,23 +1018,23 @@ public class ClarabridgeChatService extends Service implements ConversationMonit
                                         AppUserDto appUser = responseBody.getAppUser();
 
                                         // Credentials are valid and user exists
-                                        if (appUser != null && !StringUtils.isEmpty(appUser.getAppUserId())) {
+                                        if (appUser != null && !StringUtils.isEmpty(appUser.getUserId())) {
                                             // if the user has changed, clear messages
-                                            if (!StringUtils.isEqual(appUser.getAppUserId(), getAppUserId())) {
+                                            if (!StringUtils.isEqual(appUser.getUserId(), getUserId())) {
                                                 conversation.setMessages(new ArrayList<MessageDto>());
                                             }
 
                                             onUserUpdate(responseBody);
                                         } else {
-                                            persistenceFacade.saveAppUserId(null);
+                                            persistenceFacade.saveUserId(null);
                                         }
                                     } else {
-                                        appUserRemote.setAppUserId(null);
+                                        appUserRemote.setUserId(null);
                                         appUserRemote.setHasPaymentInfo(false);
                                         conversation = new ConversationDto();
                                         updateAndNotifyConversation(conversation);
                                         sync();
-                                        persistenceFacade.saveAppUserId(null);
+                                        persistenceFacade.saveUserId(null);
                                     }
 
                                     if (shouldNotifyDelegate) {
@@ -1042,7 +1079,7 @@ public class ClarabridgeChatService extends Service implements ConversationMonit
             forceAppUserSync(new Runnable() {
                 @Override
                 public void run() {
-                    clarabridgeChatApiClient.logout(appUserRemote.getAppUserId(),
+                    clarabridgeChatApiClient.logout(appUserRemote.getUserId(),
                             new ClarabridgeChatApiClientCallback<Void>() {
                                 @Override
                                 public void onResult(boolean isSuccessful, int statusCode,
@@ -1059,7 +1096,7 @@ public class ClarabridgeChatService extends Service implements ConversationMonit
     }
 
     private boolean appUserExists() {
-        return !StringUtils.isEmpty(getAppUserId());
+        return !StringUtils.isEmpty(getUserId());
     }
 
     private void onLogoutComplete(boolean isSuccessful,
@@ -1076,7 +1113,7 @@ public class ClarabridgeChatService extends Service implements ConversationMonit
             appUserRemote = new AppUserDto();
             conversation = new ConversationDto();
             persistenceFacade.saveJwt(null);
-            persistenceFacade.saveAppUserId(null);
+            persistenceFacade.saveUserId(null);
             sync();
 
             clarabridgeChatObserver.onLogoutComplete(LogoutResult.SUCCESS);
@@ -1091,7 +1128,7 @@ public class ClarabridgeChatService extends Service implements ConversationMonit
     }
 
     private boolean isAnonymousUser() {
-        return getAppUserId() != null && sessionToken != null && !isAuthenticatedUser();
+        return getUserId() != null && sessionToken != null && !isAuthenticatedUser();
     }
 
     private void fetchUser() {
@@ -1099,7 +1136,7 @@ public class ClarabridgeChatService extends Service implements ConversationMonit
             @Override
             public void run() {
                 clarabridgeChatApiClient.getAppUser(
-                        appUserRemote.getAppUserId(),
+                        appUserRemote.getUserId(),
                         new ClarabridgeChatApiClientCallback<SdkUserDto>() {
                             @Override
                             public void onResult(boolean isSuccessful, int statusCode,
@@ -1114,7 +1151,7 @@ public class ClarabridgeChatService extends Service implements ConversationMonit
                                     appUserLocal = new AppUserDto();
                                     appUserRemote = new AppUserDto();
                                     conversation = new ConversationDto();
-                                    persistenceFacade.saveAppUserId(null);
+                                    persistenceFacade.saveUserId(null);
                                     sync();
                                     onInitializationStatusChanged(InitializationStatus.SUCCESS);
                                 } else {
@@ -1126,14 +1163,17 @@ public class ClarabridgeChatService extends Service implements ConversationMonit
         });
     }
 
-    public void createConversation(@NonNull final String intent,
-                                   @NonNull final ClarabridgeChatCallback<Void> callback) {
+    public void createConversation(@Nullable final String name,
+                                   @Nullable final String description,
+                                   @Nullable final String iconUrl,
+                                   @NonNull final List<PostConversationMessageDto> messages,
+                                   @Nullable final Map<String, Object> metadata,
+                                   @Nullable final ClarabridgeChatCallback<Void> callback) {
         onClarabridgeChatInitSuccess(new Runnable() {
             @Override
             public void run() {
-                clarabridgeChatApiClient.createConversation(
-                        intent,
-                        appUserRemote.getAppUserId(),
+                clarabridgeChatApiClient.createConversation(name, description, iconUrl, messages, metadata,
+                        appUserRemote.getUserId(),
                         new ClarabridgeChatApiClientCallback<ConversationResponseDto>() {
                             @Override
                             public void onResult(boolean isSuccessful, int statusCode,
@@ -1146,6 +1186,7 @@ public class ClarabridgeChatService extends Service implements ConversationMonit
                                     persistenceFacade.saveAppUserRemote(appUserRemote);
 
                                     ConversationDto newConversation = responseBody.getConversation();
+                                    newConversation.addMessages(responseBody.getMessages());
                                     newConversation.addMessages(conversation.getUnsentMessages());
                                     onConversationUpdated(newConversation);
 
@@ -1155,7 +1196,9 @@ public class ClarabridgeChatService extends Service implements ConversationMonit
                                     responseBuilder.withError("Error while creating conversation");
                                 }
 
-                                callback.run(responseBuilder.build());
+                                if (callback != null) {
+                                    callback.run(responseBuilder.build());
+                                }
                             }
                         });
             }
@@ -1163,15 +1206,19 @@ public class ClarabridgeChatService extends Service implements ConversationMonit
     }
 
     public void createUser(@NonNull final String intent,
-                           @NonNull final ClarabridgeChatCallback<Void> callback) {
+                           @Nullable final String name,
+                           @Nullable final String description,
+                           @Nullable final String iconUrl,
+                           @NonNull final List<PostConversationMessageDto> messages,
+                           @Nullable final ClarabridgeChatCallback<Void> callback) {
         onClarabridgeChatInitSuccess(new Runnable() {
             @Override
             public void run() {
-                clarabridgeChatApiClient.createUser(
-                        appUserLocal,
-                        appUserRemote.getUserId(),
-                        intent,
-                        new ClarabridgeChatApiClientCallback<SdkUserDto>() {
+                PostAppUserConversationDto conversationDto = new PostAppUserConversationDto(
+                        name, iconUrl, description, ClarabridgeChatApiClient.CONVERSATION_PERSONAL_TYPE, messages);
+
+                clarabridgeChatApiClient.createUser(appUserLocal, appUserRemote.getExternalId(),
+                        intent, conversationDto, new ClarabridgeChatApiClientCallback<SdkUserDto>() {
                             @Override
                             public void onResult(boolean isSuccessful, int statusCode,
                                                  @Nullable SdkUserDto responseBody) {
@@ -1191,7 +1238,9 @@ public class ClarabridgeChatService extends Service implements ConversationMonit
                                     responseBuilder.withError("Error while creating user");
                                 }
 
-                                callback.run(responseBuilder.build());
+                                if (callback != null) {
+                                    callback.run(responseBuilder.build());
+                                }
                             }
                         });
             }
@@ -1208,7 +1257,7 @@ public class ClarabridgeChatService extends Service implements ConversationMonit
         }
 
         appUserRemote = sdkUser.getAppUser();
-        persistenceFacade.saveAppUserId(appUserRemote != null ? appUserRemote.getAppUserId() : null);
+        persistenceFacade.saveUserId(appUserRemote != null ? appUserRemote.getUserId() : null);
 
         registerForPushNotifications();
 
@@ -1320,12 +1369,12 @@ public class ClarabridgeChatService extends Service implements ConversationMonit
         return appUserRemote;
     }
 
-    public String getAppUserId() {
+    public String getUserId() {
         if (appUserRemote == null) {
             appUserRemote = new AppUserDto();
         }
 
-        return appUserRemote.getAppUserId();
+        return appUserRemote.getUserId();
     }
 
     public String getConversationId() {
@@ -1377,11 +1426,12 @@ public class ClarabridgeChatService extends Service implements ConversationMonit
      * @param internalCallback a {@link ClarabridgeChatCallback} to be invoked when the request completes that will
      *                         contain a {@link ConversationDto} if successful, otherwise an error message
      */
-    private void fetchConversationFromNetwork(@NonNull final String conversationId,
+    @VisibleForTesting
+    void fetchConversationFromNetwork(@NonNull final String conversationId,
                                               @NonNull final ClarabridgeChatCallback<ConversationDto> internalCallback) {
 
-        String appUserId = getAppUserId();
-        if (appUserId == null) {
+        String userId = getUserId();
+        if (userId == null) {
             ClarabridgeChatCallback.Response<ConversationDto> callbackResponse =
                     new ClarabridgeChatCallback.Response.Builder<ConversationDto>(400)
                             .withError("Cannot get conversation for non-existing user.")
@@ -1392,7 +1442,7 @@ public class ClarabridgeChatService extends Service implements ConversationMonit
 
         clarabridgeChatApiClient.subscribe(
                 conversationId,
-                appUserId,
+                userId,
                 new ClarabridgeChatApiClientCallback<ConversationResponseDto>() {
                     @Override
                     public void onResult(boolean isSuccessful,
@@ -1421,7 +1471,8 @@ public class ClarabridgeChatService extends Service implements ConversationMonit
     }
 
     /**
-     * Retrieve the conversations list from storage
+     * Retrieve the the 10 most recently active {@link com.clarabridge.core.Conversation}s for the current user, sorted
+     * from most recently updated to last.
      *
      * @param internalCallback a {@link ClarabridgeChatCallback} to be invoked when the list is ready
      */
@@ -1430,14 +1481,46 @@ public class ClarabridgeChatService extends Service implements ConversationMonit
             @Override
             public void run() {
                 List<ConversationDto> conversationsList = persistenceFacade.getConversationsList();
-                Collections.sort(conversationsList, Collections.reverseOrder());
-                ClarabridgeChatCallback.Response<List<ConversationDto>> callbackResponse =
-                        new ClarabridgeChatCallback.Response.Builder<List<ConversationDto>>(200)
-                                .withData(conversationsList)
-                                .build();
-                internalCallback.run(callbackResponse);
+                if (!conversationsList.isEmpty()) {
+                    ClarabridgeChatCallback.Response<List<ConversationDto>> callbackResponse =
+                            new ClarabridgeChatCallback.Response.Builder<List<ConversationDto>>(200)
+                                    .withData(conversationsList)
+                                    .build();
+                    internalCallback.run(callbackResponse);
+                } else {
+                    refreshConversationList(0, false, internalCallback);
+                }
             }
         });
+    }
+
+    /**
+     * Retrieve the 10 more recently active {@link com.clarabridge.core.Conversation}s for the current user, sorted
+     * from most recently updated to last.
+     *
+     * @param internalCallback a {@link ClarabridgeChatCallback} to be invoked when the list is ready
+     */
+    public void getMoreConversationsList(@NonNull final ClarabridgeChatCallback<List<ConversationDto>> internalCallback) {
+        onClarabridgeChatInitSuccess(new Runnable() {
+            @Override
+            public void run() {
+                if (persistenceFacade.isHasMoreConversations()) {
+                    int currentOffset = !persistenceFacade.getConversationsList().isEmpty()
+                            ? persistenceFacade.getConversationsList().size()
+                            : 0;
+                    refreshConversationList(currentOffset, false, internalCallback);
+                }
+            }
+        });
+    }
+
+    /**
+     * Accessor method for knowing if there are more conversations to be fetched or not.
+     *
+     * @return true if there is more conversations to be fetched or false if not.
+     */
+    public boolean isHasMoreConversations() {
+        return persistenceFacade.isHasMoreConversations();
     }
 
     public ConfigDto getConfig() {
@@ -1486,7 +1569,7 @@ public class ClarabridgeChatService extends Service implements ConversationMonit
                     clarabridgeChatApiClient.uploadImage(
                             getConversationId(),
                             imageMessage,
-                            getAppUserId(),
+                            getUserId(),
                             new ClarabridgeChatApiClientCallback<FileUploadDto>() {
                                 @Override
                                 public void onResult(boolean isSuccessful, int statusCode,
@@ -1530,7 +1613,7 @@ public class ClarabridgeChatService extends Service implements ConversationMonit
                     clarabridgeChatApiClient.uploadFile(
                             getConversationId(),
                             fileMessage,
-                            getAppUserId(),
+                            getUserId(),
                             new ClarabridgeChatApiClientCallback<FileUploadDto>() {
                                 @Override
                                 public void onResult(boolean isSuccessful, int statusCode,
@@ -1549,7 +1632,7 @@ public class ClarabridgeChatService extends Service implements ConversationMonit
         onClarabridgeChatInitSuccess(new Runnable() {
             @Override
             public void run() {
-                if (getAppUserId() != null) {
+                if (getUserId() != null) {
                     if (StringUtils.isEqual(conversationId, getConversationId())) {
                         ClarabridgeChatCallback.Response<ConversationDto> callbackResponse =
                                 new ClarabridgeChatCallback.Response.Builder<ConversationDto>(200)
@@ -1561,7 +1644,7 @@ public class ClarabridgeChatService extends Service implements ConversationMonit
 
                     clarabridgeChatApiClient.subscribe(
                             conversationId,
-                            getAppUserId(),
+                            getUserId(),
                             new ClarabridgeChatApiClientCallback<ConversationResponseDto>() {
                                 @Override
                                 public void onResult(boolean isSuccessful, int statusCode,
@@ -1597,6 +1680,51 @@ public class ClarabridgeChatService extends Service implements ConversationMonit
                 }
             }
         });
+    }
+
+    public void updateConversationById(@NonNull final String conversationId,
+                                       @Nullable final String name,
+                                       @Nullable final String description,
+                                       @Nullable final String iconUrl,
+                                       @Nullable final Map<String, Object> metadata,
+                                       @NonNull final ClarabridgeChatCallback<ConversationDto> callback) {
+        onClarabridgeChatInitSuccess(new Runnable() {
+            @Override
+            public void run() {
+                String userId = getUserId();
+                if (userId != null) {
+                    clarabridgeChatApiClient.updateConversation(conversationId, name, description, iconUrl, metadata,
+                            new ClarabridgeChatApiClientCallback<ConversationResponseDto>() {
+                                @Override
+                                public void onResult(boolean isSuccessful, int statusCode,
+                                                     @Nullable ConversationResponseDto responseBody) {
+
+                                    ClarabridgeChatCallback.Response.Builder<ConversationDto> responseBuilder =
+                                            new ClarabridgeChatCallback.Response.Builder<>(statusCode);
+
+                                    if (isSuccessful && responseBody != null) {
+                                        final ConversationDto conversation = responseBody.getConversation();
+
+                                        if (conversation != null) {
+                                            conversation.setMessages(responseBody.getMessages());
+                                            updateAndNotifyConversation(conversation);
+                                            responseBuilder.withData(conversation);
+                                            persistenceFacade.updateConversation(conversationId, conversation);
+                                        } else {
+                                            responseBuilder.withError("Conversation response was empty");
+                                        }
+
+                                    } else {
+                                        responseBuilder.withError("Error updating conversation.");
+                                    }
+
+                                    callback.run(responseBuilder.build());
+                                }
+                            });
+                }
+            }
+        });
+
     }
 
     public void setFirebaseCloudMessagingToken(final String token,
@@ -1644,7 +1772,7 @@ public class ClarabridgeChatService extends Service implements ConversationMonit
 
             clarabridgeChatApiClient.updateAppUser(
                     appUserLocal,
-                    appUserRemote.getAppUserId(),
+                    appUserRemote.getUserId(),
                     new ClarabridgeChatApiClientCallback<Void>() {
                         @Override
                         public void onResult(boolean isSuccessful, int statusCode, @Nullable Void responseBody) {
@@ -1711,7 +1839,7 @@ public class ClarabridgeChatService extends Service implements ConversationMonit
             fetchCustomerGuard = true;
 
             clarabridgeChatApiClient.getStripeCustomer(
-                    appUserRemote.getAppUserId(),
+                    appUserRemote.getUserId(),
                     new ClarabridgeChatApiClientCallback<StripeCustomerDto>() {
                         @Override
                         public void onResult(boolean isSuccessful, int statusCode,
@@ -1738,7 +1866,7 @@ public class ClarabridgeChatService extends Service implements ConversationMonit
                         .get(conversation.getMessages().size() - 1)
                         .getReceived();
 
-                conversationManager.setParticipantLastRead(getConversationId(), newTimestamp, getAppUserId());
+                conversationManager.setParticipantLastRead(getConversationId(), newTimestamp, getUserId());
                 clarabridgeChatObserver.onConversationsListUpdated(persistenceFacade.getConversationsList());
 
                 ConversationDto updatedConversation = persistenceFacade.getConversationById(getConversationId());
@@ -1750,7 +1878,7 @@ public class ClarabridgeChatService extends Service implements ConversationMonit
     }
 
     public void startTyping() {
-        boolean isInvalidUser = StringUtils.isEmpty(getAppUserId());
+        boolean isInvalidUser = StringUtils.isEmpty(getUserId());
         boolean isTypingDisabled = userSettings == null
                 || userSettings.getTyping() == null
                 || !userSettings.getTyping().isEnabled();
@@ -1805,7 +1933,7 @@ public class ClarabridgeChatService extends Service implements ConversationMonit
             clarabridgeChatApiClient.sendConversationActivity(
                     getConversationId(),
                     type,
-                    getAppUserId(),
+                    getUserId(),
                     callback);
         }
     }
@@ -1816,7 +1944,7 @@ public class ClarabridgeChatService extends Service implements ConversationMonit
             clarabridgeChatApiClient.postback(
                     getConversationId(),
                     messageAction,
-                    getAppUserId(),
+                    getUserId(),
                     new ClarabridgeChatApiClientCallback<Void>() {
                         @Override
                         public void onResult(boolean isSuccessful, int statusCode, @Nullable Void responseBody) {
@@ -1985,9 +2113,9 @@ public class ClarabridgeChatService extends Service implements ConversationMonit
 
             Collections.sort(conversation.getMessages());
 
-            final String currentUserId = getAppUserId();
+            final String currentUserId = getUserId();
             for (MessageDto message : conversation.getMessages()) {
-                message.setIsFromCurrentUser(StringUtils.isEqual(message.getAuthorId(),
+                message.setIsFromCurrentUser(StringUtils.isEqual(message.getUserId(),
                         currentUserId));
             }
 
@@ -2049,6 +2177,7 @@ public class ClarabridgeChatService extends Service implements ConversationMonit
             case CONNECTED:
                 if (retryInitOnConnect) {
                     init();
+                    retryInitOnConnect = false;
                 } else if (isConversationStarted() && this.connectionStatus != ConnectionStatus.UNKNOWN) {
                     refreshConversation(null);
                 }
@@ -2067,7 +2196,14 @@ public class ClarabridgeChatService extends Service implements ConversationMonit
 
     private void onClarabridgeChatConnectionStatusChanged(@NonNull final ClarabridgeChatConnectionStatus status) {
         if (status == ClarabridgeChatConnectionStatus.CONNECTED) {
-            refreshConversationList();
+            refreshConversationList(0, true, new ClarabridgeChatCallback<List<ConversationDto>>() {
+                @Override
+                public void run(@NonNull Response<List<ConversationDto>> response) {
+                    if (response.getData() != null && !response.getData().isEmpty()) {
+                        clarabridgeChatObserver.onConversationsListUpdated(persistenceFacade.getConversationsList());
+                    }
+                }
+            });
             refreshConversation(new Runnable() {
                 @Override
                 public void run() {
@@ -2124,7 +2260,7 @@ public class ClarabridgeChatService extends Service implements ConversationMonit
                 clarabridgeChatApiClient.postMessage(
                         getConversationId(),
                         message,
-                        getAppUserId(),
+                        getUserId(),
                         new ClarabridgeChatApiClientCallback<PostMessageDto>() {
                             @Override
                             public void onResult(boolean isSuccessful, int statusCode,
@@ -2150,8 +2286,8 @@ public class ClarabridgeChatService extends Service implements ConversationMonit
                                 conversationManager.updateTimestampsAndUnreadCount(
                                         conversation,
                                         message.getReceived(),
-                                        message.getAuthorId(),
-                                        getAppUserId(),
+                                        message.getUserId(),
+                                        getUserId(),
                                         true
                                 );
 
@@ -2193,7 +2329,6 @@ public class ClarabridgeChatService extends Service implements ConversationMonit
                             if (runnable != null) {
                                 runnable.run();
                             }
-
                             return;
                         }
 
@@ -2212,32 +2347,70 @@ public class ClarabridgeChatService extends Service implements ConversationMonit
                 });
     }
 
+    /**
+     * This method is calling directly the get conversation list endpoint and updati
+     *
+     * @param offset   The offset is simply the number of conversations you wish to skip before beginning
+     *                 to the new conversation list. It starts by 0 and it returns 10 conversations.
+     * @param callback a {@link ClarabridgeChatCallback} to be invoked when the request completes that will
+     *                 contain a {@link ConversationDto} if successful, otherwise an error message
+     */
     @VisibleForTesting
-    void refreshConversationList() {
-        if (appUserRemote == null || appUserRemote.getAppUserId() == null) {
+    void refreshConversationList(final int offset,
+                                 final boolean clearPersistence,
+                                 @Nullable final ClarabridgeChatCallback<List<ConversationDto>> callback) {
+        if (appUserRemote == null || appUserRemote.getUserId() == null) {
             Logger.w(TAG, "There was no app user id to fetch the conversations list");
+            if (callback != null) {
+                callback.run(new ClarabridgeChatCallback.Response
+                        .Builder<List<ConversationDto>>(400)
+                        .withData(null)
+                        .build());
+            }
             return;
         }
 
         clarabridgeChatApiClient.getConversations(
-                appUserRemote.getAppUserId(),
+                appUserRemote.getUserId(),
+                offset,
                 new ClarabridgeChatApiClientCallback<ConversationsListResponseDto>() {
                     @Override
                     public void onResult(
                             boolean isSuccessful,
                             int statusCode,
                             @Nullable ConversationsListResponseDto responseBody) {
-                        if (!isSuccessful) {
-                            Logger.e(TAG, "Unable to retrieve conversations list");
-                            return;
+
+                        ClarabridgeChatCallback.Response<List<ConversationDto>> callbackResponse;
+
+                        if (isSuccessful) {
+                            persistenceFacade.setHasMoreConversations(responseBody != null
+                                    && responseBody.getConversationsPagination() != null
+                                    && responseBody.getConversationsPagination().isHasMore());
+
+                            List<ConversationDto> conversationsList = responseBody != null
+                                    ? responseBody.getConversations()
+                                    : new ArrayList<ConversationDto>();
+
+                            if (clearPersistence && !persistenceFacade
+                                    .getConversationsList(10).containsAll(conversationsList)) {
+                                persistenceFacade.clearInMemoryCachedConversationList();
+                            }
+                            persistenceFacade.saveConversationsList(conversationsList);
+
+                            callbackResponse =
+                                    new ClarabridgeChatCallback.Response.Builder<List<ConversationDto>>(200)
+                                            .withData(conversationsList)
+                                            .build();
+                        } else {
+                            callbackResponse =
+                                    new ClarabridgeChatCallback.Response.Builder<List<ConversationDto>>(statusCode)
+                                            .withData(null)
+                                            .build();
                         }
 
-                        List<ConversationDto> conversationsList = responseBody != null
-                                ? responseBody.getConversations()
-                                : new ArrayList<ConversationDto>();
-
-                        persistenceFacade.saveConversationsList(conversationsList);
-                        clarabridgeChatObserver.onConversationsListUpdated(conversationsList);
+                        if (callback != null) {
+                            callback.run(callbackResponse);
+                        }
                     }
                 }
         );
@@ -2305,7 +2478,7 @@ public class ClarabridgeChatService extends Service implements ConversationMonit
             @Override
             public void run() {
                 clarabridgeChatApiClient.stripeCharge(
-                        appUserRemote.getAppUserId(),
+                        appUserRemote.getUserId(),
                         messageAction,
                         stripeToken,
                         new ClarabridgeChatApiClientCallback<Void>() {
@@ -2326,7 +2499,7 @@ public class ClarabridgeChatService extends Service implements ConversationMonit
     private void storeStripeToken(final MessageActionDto messageAction, final String stripeToken) {
         if (appUserRemote != null) {
             clarabridgeChatApiClient.storeStripeToken(
-                    appUserRemote.getAppUserId(),
+                    appUserRemote.getUserId(),
                     stripeToken,
                     new ClarabridgeChatApiClientCallback<Void>() {
                         @Override
@@ -2347,12 +2520,12 @@ public class ClarabridgeChatService extends Service implements ConversationMonit
         onClarabridgeChatInitSuccess(new Runnable() {
             @Override
             public void run() {
-                if (getAppUserId() != null) {
+                if (getUserId() != null) {
                     final String clientId = serviceSettings.getClientId();
                     final String firebaseCloudMessagingToken = serviceSettings.getFirebaseCloudMessagingToken();
 
                     clarabridgeChatApiClient.updatePushToken(
-                            appUserRemote.getAppUserId(),
+                            appUserRemote.getUserId(),
                             clientId,
                             firebaseCloudMessagingToken,
                             new ClarabridgeChatApiClientCallback<Void>() {
@@ -2380,7 +2553,7 @@ public class ClarabridgeChatService extends Service implements ConversationMonit
                                 }
                             });
                 } else {
-                    Log.i(TAG, "Missing appUserId, push token cannot be uploaded. Undoing.");
+                    Log.i(TAG, "Missing userId, push token cannot be uploaded. Undoing.");
                     serviceSettings.setFirebaseCloudMessagingToken(null);
 
                     ClarabridgeChatCallback.Response<LoginResult> callbackResponse =
@@ -2393,18 +2566,16 @@ public class ClarabridgeChatService extends Service implements ConversationMonit
         });
     }
 
-    private void updateConnectionStatus() {
-        final ConnectivityManager connectivityManager =
-                (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+    private void updateConnectionStatus(NetworkInfo networkInfo) {
+        NetworkInfo.State state = NetworkInfo.State.UNKNOWN;
+        if (networkInfo != null) {
+            state = networkInfo.getState();
+        }
 
-        if (connectivityManager != null) {
-            final NetworkInfo activeNetInfo = connectivityManager.getActiveNetworkInfo();
-
-            if (activeNetInfo == null || !activeNetInfo.isConnected() || !activeNetInfo.isAvailable()) {
-                onConnectionStatusChanged(ConnectionStatus.DISCONNECTED);
-            } else {
-                onConnectionStatusChanged(ConnectionStatus.CONNECTED);
-            }
+        if (state == NetworkInfo.State.CONNECTED) {
+            onConnectionStatusChanged(ConnectionStatus.CONNECTED);
+        } else if (state == NetworkInfo.State.DISCONNECTED) {
+            onConnectionStatusChanged(ConnectionStatus.DISCONNECTED);
         }
     }
 
@@ -2416,7 +2587,7 @@ public class ClarabridgeChatService extends Service implements ConversationMonit
      */
     @VisibleForTesting
     void notifyForUnread(final ConversationDto updatedConversation) {
-        int unreadCount = updatedConversation.getUnreadCount(getAppUserId());
+        int unreadCount = updatedConversation.getUnreadCount(getUserId());
 
         if (unreadCount == 0) {
             return;
@@ -2436,8 +2607,8 @@ public class ClarabridgeChatService extends Service implements ConversationMonit
             for (int i = lastMessageIndex; i >= lastMessageIndex - unreadCount && i >= 0; i--) {
                 MessageDto candidateMessage = updatedMessages.get(i);
 
-                boolean isFromCurrentUser = StringUtils.isNotNullAndEqual(candidateMessage.getAuthorId(),
-                        getAppUserId());
+                boolean isFromCurrentUser = StringUtils.isNotNullAndEqual(candidateMessage.getUserId(),
+                        getUserId());
 
                 if (!isFromCurrentUser) {
                     triggerNotification(updatedConversation.getId(), candidateMessage);

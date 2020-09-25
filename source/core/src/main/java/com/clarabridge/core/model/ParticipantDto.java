@@ -1,6 +1,6 @@
 package com.clarabridge.core.model;
 
-import android.support.annotation.Nullable;
+import androidx.annotation.Nullable;
 
 import com.google.gson.annotations.SerializedName;
 
@@ -11,18 +11,19 @@ public class ParticipantDto {
 
     @SerializedName("_id")
     private String id;
-    private String appUserId;
+    @SerializedName("appUserId")
+    private String userId;
     private int unreadCount;
     @Nullable
     private Double lastRead;
 
     public ParticipantDto(
             String id,
-            String appUserId,
+            String userId,
             int unreadCount,
             @Nullable Double lastRead) {
         this.id = id;
-        this.appUserId = appUserId;
+        this.userId = userId;
         this.unreadCount = unreadCount;
         this.lastRead = lastRead;
     }
@@ -35,10 +36,10 @@ public class ParticipantDto {
     }
 
     /**
-     * @return the app user ID
+     * @return the user ID
      */
-    public String getAppUserId() {
-        return appUserId;
+    public String getUserId() {
+        return userId;
     }
 
     /**
@@ -91,7 +92,7 @@ public class ParticipantDto {
         if (id != null ? !id.equals(that.id) : that.id != null) {
             return false;
         }
-        if (appUserId != null ? !appUserId.equals(that.appUserId) : that.appUserId != null) {
+        if (userId != null ? !userId.equals(that.userId) : that.userId != null) {
             return false;
         }
         return lastRead != null ? lastRead.equals(that.lastRead) : that.lastRead == null;
@@ -100,7 +101,7 @@ public class ParticipantDto {
     @Override
     public int hashCode() {
         int result = id != null ? id.hashCode() : 0;
-        result = 31 * result + (appUserId != null ? appUserId.hashCode() : 0);
+        result = 31 * result + (userId != null ? userId.hashCode() : 0);
         result = 31 * result + unreadCount;
         result = 31 * result + (lastRead != null ? lastRead.hashCode() : 0);
         return result;

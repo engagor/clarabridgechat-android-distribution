@@ -2,8 +2,10 @@ package com.clarabridge.core.monitor;
 
 import android.os.Handler;
 import android.os.Looper;
-import android.support.annotation.Nullable;
-import android.support.annotation.VisibleForTesting;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.VisibleForTesting;
 
 import com.saulpower.fayeclient.FayeClient;
 
@@ -13,9 +15,13 @@ import org.json.JSONObject;
 
 import java.net.URI;
 
+import com.clarabridge.core.AuthenticationCallback;
+import com.clarabridge.core.AuthenticationDelegate;
+import com.clarabridge.core.AuthenticationError;
 import com.clarabridge.core.ConversationEventType;
 import com.clarabridge.core.Logger;
 import com.clarabridge.core.MessageType;
+import com.clarabridge.core.facade.PersistenceFacade;
 import com.clarabridge.core.facade.Serialization;
 import com.clarabridge.core.model.ConversationEventDto;
 import com.clarabridge.core.model.MessageDto;
@@ -83,35 +89,38 @@ public class ConversationMonitor implements FayeClient.FayeListener {
 
     private final Serialization serializer;
     private final String appId;
-    private final String appUserId;
+    private final String userId;
     private final String clientId;
-    private final String jwt;
     private final String sessionToken;
     private final FayeClient fayeClient;
     private final Delegate delegate;
+    private final AuthenticationDelegate authenticationDelegate;
+    private final PersistenceFacade persistenceFacade;
 
     private boolean connected;
 
     ConversationMonitor(
             Serialization serializer,
             String appId,
-            String appUserId,
+            String userId,
             String clientId,
-            String jwt,
+            PersistenceFacade persistenceFacade,
             String sessionToken,
             String host,
             FayeClient fayeClient,
             Delegate delegate,
+            AuthenticationDelegate authenticationDelegate,
             int maxConnectionAttempts,
             long retryInterval) {
 
         this.serializer = serializer;
         this.appId = appId;
-        this.appUserId = appUserId;
+        this.userId = userId;
         this.clientId = clientId;
-        this.jwt = jwt;
         this.sessionToken = sessionToken;
         this.delegate = delegate;
+        this.authenticationDelegate = authenticationDelegate;
+        this.persistenceFacade = persistenceFacade;
 
         if (fayeClient == null) {
             // FayeClient internally expects the scheme to be "wss" to establish a secure connection
@@ -122,7 +131,7 @@ public class ConversationMonitor implements FayeClient.FayeListener {
             this.fayeClient = new FayeClient(
                     new Handler(Looper.getMainLooper()),
                     URI.create(fayeUrl),
-                    String.format("/sdk/apps/%s/appusers/%s", appId, appUserId),
+                    String.format("/sdk/apps/%s/appusers/%s", appId, userId),
                     maxConnectionAttempts,
                     retryInterval);
         } else {
@@ -152,6 +161,19 @@ public class ConversationMonitor implements FayeClient.FayeListener {
         if (delegate != null) {
             delegate.onMonitorDisconnected();
         }
+    }
+
+    @Override
+    public void onAuthenticationError(AuthenticationError authenticationError) {
+        Logger.d(LOG_TAG, "onAuthenticationError: " + authenticationError);
+        connected = false;
+        authenticationDelegate.onInvalidAuth(authenticationError, new AuthenticationCallback() {
+            @Override
+            public void updateToken(@NonNull String jwt) {
+                persistenceFacade.saveJwt(jwt);
+                fayeClient.resetWebSocketConnection();
+            }
+        });
     }
 
     @Override
@@ -214,7 +236,7 @@ public class ConversationMonitor implements FayeClient.FayeListener {
                 processActivityEvent(
                         conversationId,
                         message.getActivity(),
-                        message.getConversation().getAppMakerLastRead());
+                        message.getConversation().getBusinessLastRead());
                 break;
             case FAILED_UPLOAD:
                 processRejectionEvent(message.getClient(), message.getData(), message.getError());
@@ -281,13 +303,13 @@ public class ConversationMonitor implements FayeClient.FayeListener {
      *
      * @param conversationId   the ID of the parent conversation
      * @param activity         the {@link WsActivityDto} received through the WebSocket
-     * @param appMakerLastRead the timestamp received if the activity is a
+     * @param businessLastRead the timestamp received if the activity is a
      *                         {@link ConversationEventType#CONVERSATION_READ}
      */
     private void processActivityEvent(
             String conversationId,
             WsActivityDto activity,
-            Double appMakerLastRead) {
+            Double businessLastRead) {
 
         if (delegate != null && activity != null) {
             ConversationEventType type = ConversationEventType.findByValue(activity.getType());
@@ -299,7 +321,7 @@ public class ConversationMonitor implements FayeClient.FayeListener {
             ConversationEventDto conversationActivity = new ConversationEventDto(conversationId, type);
 
             conversationActivity.setRole(activity.getRole());
-            conversationActivity.setAppUserId(activity.getAppUserId());
+            conversationActivity.setUserId(activity.getUserId());
 
             if (activity.getData() != null) {
                 conversationActivity.setName(activity.getData().getName());
@@ -307,9 +329,9 @@ public class ConversationMonitor implements FayeClient.FayeListener {
                 conversationActivity.setLastRead(activity.getData().getLastRead());
             }
 
-            if (ConversationEventRole.APP_MAKER.getValue().equals(activity.getRole())
-                    && appMakerLastRead != null) {
-                conversationActivity.setLastRead(appMakerLastRead);
+            if (ConversationEventRole.BUSINESS.getValue().equals(activity.getRole())
+                    && businessLastRead != null) {
+                conversationActivity.setLastRead(businessLastRead);
             }
 
             delegate.onConversationActivityReceived(conversationActivity);
@@ -363,7 +385,7 @@ public class ConversationMonitor implements FayeClient.FayeListener {
             }
 
             ConversationEventDto activity = new ConversationEventDto(conversationId, type);
-            activity.setAppUserId(participant.getAppUserId());
+            activity.setUserId(participant.getUserId());
 
             delegate.onConversationActivityReceived(activity);
         }
@@ -392,8 +414,8 @@ public class ConversationMonitor implements FayeClient.FayeListener {
 
             try {
                 args.put("appId", appId);
-                args.put("appUserId", appUserId);
-
+                args.put("appUserId", userId);
+                String jwt = persistenceFacade.getJwt();
                 if (!StringUtils.isEmpty(jwt)) {
                     args.put("jwt", jwt);
                 } else if (!StringUtils.isEmpty(sessionToken)) {

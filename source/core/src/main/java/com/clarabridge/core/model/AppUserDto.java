@@ -11,9 +11,9 @@ import com.clarabridge.core.utils.StringUtils;
 
 public class AppUserDto implements Serializable {
     @SerializedName("_id")
-    private String appUserId;
-    @SerializedName("userId")
     private String userId;
+    @SerializedName("userId")
+    private String externalId;
     @SerializedName("givenName")
     private String firstName;
     @SerializedName("surname")
@@ -23,7 +23,7 @@ public class AppUserDto implements Serializable {
     @SerializedName("signedUpAt")
     private String signedUpAt;
     @SerializedName("properties")
-    private Map<String, Object> properties;
+    private Map<String, Object> metadata;
     @SerializedName("hasPaymentInfo")
     private boolean hasPaymentInfo;
     @LocalField
@@ -31,17 +31,17 @@ public class AppUserDto implements Serializable {
     private Boolean modified;
 
     public void update(AppUserDto rhs) {
-        this.appUserId = rhs.appUserId;
         this.userId = rhs.userId;
+        this.externalId = rhs.externalId;
         this.firstName = rhs.firstName;
         this.lastName = rhs.lastName;
         this.email = rhs.email;
         this.signedUpAt = rhs.signedUpAt;
-        this.properties = rhs.properties;
+        this.metadata = rhs.metadata;
         this.hasPaymentInfo = rhs.hasPaymentInfo;
     }
 
-    // Merge modifiable properties, preserving rhs
+    // Merge modifiable metadata
     public void merge(AppUserDto rhs) {
         if (rhs.firstName != null && !StringUtils.isEqual(firstName, rhs.firstName)) {
             firstName = rhs.firstName;
@@ -59,15 +59,15 @@ public class AppUserDto implements Serializable {
             signedUpAt = rhs.signedUpAt;
         }
 
-        mergeProperties(rhs.properties);
+        mergeMetadata(rhs.metadata);
     }
 
-    public String getAppUserId() {
-        return appUserId;
+    public String getUserId() {
+        return userId;
     }
 
-    public void setAppUserId(String appUserId) {
-        this.appUserId = appUserId;
+    public void setUserId(String userId) {
+        this.userId = userId;
     }
 
     public String getFirstName() {
@@ -102,16 +102,16 @@ public class AppUserDto implements Serializable {
         this.signedUpAt = signedUpAt;
     }
 
-    public Map<String, Object> getProperties() {
-        if (properties == null) {
-            properties = new HashMap<>();
+    public Map<String, Object> getMetadata() {
+        if (metadata == null) {
+            metadata = new HashMap<>();
         }
 
-        return properties;
+        return metadata;
     }
 
-    public void setProperties(Map<String, Object> properties) {
-        this.properties = properties;
+    public void setMetadata(Map<String, Object> metadata) {
+        this.metadata = metadata;
     }
 
     public Boolean getModified() {
@@ -126,12 +126,12 @@ public class AppUserDto implements Serializable {
         this.modified = modified;
     }
 
-    public String getUserId() {
-        return userId;
+    public String getExternalId() {
+        return externalId;
     }
 
-    public void setUserId(String userId) {
-        this.userId = userId;
+    public void setExternalId(String externalId) {
+        this.externalId = externalId;
     }
 
     public boolean getHasPaymentInfo() {
@@ -142,12 +142,12 @@ public class AppUserDto implements Serializable {
         this.hasPaymentInfo = hasPaymentInfo;
     }
 
-    private void mergeProperties(Map<String, Object> survivingProps) {
+    private void mergeMetadata(Map<String, Object> survivingProps) {
         final Map<String, Object> mergedProps = new HashMap<>();
 
-        if (properties != null) {
-            // Add remote properties
-            for (final Map.Entry<String, Object> entry : properties.entrySet()) {
+        if (metadata != null) {
+            // Add remote metadata
+            for (final Map.Entry<String, Object> entry : metadata.entrySet()) {
                 final String key = entry.getKey();
                 final Object value = entry.getValue();
 
@@ -169,7 +169,7 @@ public class AppUserDto implements Serializable {
             }
         }
 
-        properties = mergedProps;
+        metadata = mergedProps;
     }
 
     @Override
@@ -186,10 +186,10 @@ public class AppUserDto implements Serializable {
         if (hasPaymentInfo != that.hasPaymentInfo) {
             return false;
         }
-        if (appUserId != null ? !appUserId.equals(that.appUserId) : that.appUserId != null) {
+        if (userId != null ? !userId.equals(that.userId) : that.userId != null) {
             return false;
         }
-        if (userId != null ? !userId.equals(that.userId) : that.userId != null) {
+        if (externalId != null ? !externalId.equals(that.externalId) : that.externalId != null) {
             return false;
         }
         if (firstName != null ? !firstName.equals(that.firstName) : that.firstName != null) {
@@ -204,7 +204,7 @@ public class AppUserDto implements Serializable {
         if (signedUpAt != null ? !signedUpAt.equals(that.signedUpAt) : that.signedUpAt != null) {
             return false;
         }
-        if (properties != null ? !properties.equals(that.properties) : that.properties != null) {
+        if (metadata != null ? !metadata.equals(that.metadata) : that.metadata != null) {
             return false;
         }
         return modified != null ? modified.equals(that.modified) : that.modified == null;
@@ -212,13 +212,13 @@ public class AppUserDto implements Serializable {
 
     @Override
     public int hashCode() {
-        int result = appUserId != null ? appUserId.hashCode() : 0;
-        result = 31 * result + (userId != null ? userId.hashCode() : 0);
+        int result = userId != null ? userId.hashCode() : 0;
+        result = 31 * result + (externalId != null ? externalId.hashCode() : 0);
         result = 31 * result + (firstName != null ? firstName.hashCode() : 0);
         result = 31 * result + (lastName != null ? lastName.hashCode() : 0);
         result = 31 * result + (email != null ? email.hashCode() : 0);
         result = 31 * result + (signedUpAt != null ? signedUpAt.hashCode() : 0);
-        result = 31 * result + (properties != null ? properties.hashCode() : 0);
+        result = 31 * result + (metadata != null ? metadata.hashCode() : 0);
         result = 31 * result + (hasPaymentInfo ? 1 : 0);
         result = 31 * result + (modified != null ? modified.hashCode() : 0);
         return result;

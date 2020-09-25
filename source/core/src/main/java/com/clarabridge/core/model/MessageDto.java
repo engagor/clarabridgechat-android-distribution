@@ -1,6 +1,6 @@
 package com.clarabridge.core.model;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import com.google.gson.annotations.SerializedName;
 
@@ -26,7 +26,7 @@ public class MessageDto implements Serializable, Comparable<MessageDto> {
     @SerializedName("_id")
     private String id;
     @SerializedName("name")
-    private String name;
+    private String displayName;
     @SerializedName("role")
     private String role;
     @SerializedName("text")
@@ -44,7 +44,7 @@ public class MessageDto implements Serializable, Comparable<MessageDto> {
     @SerializedName("received")
     private Double received;
     @SerializedName("authorId")
-    private String authorId;
+    private String userId;
     @SerializedName("mediaUrl")
     private String mediaUrl;
     @SerializedName("mediaType")
@@ -79,7 +79,7 @@ public class MessageDto implements Serializable, Comparable<MessageDto> {
 
     public MessageDto(final MessageDto message) {
         id = message.id;
-        name = message.name;
+        displayName = message.displayName;
         role = message.role;
         text = message.text;
         textFallback = message.textFallback;
@@ -93,7 +93,7 @@ public class MessageDto implements Serializable, Comparable<MessageDto> {
         }
 
         received = message.received;
-        authorId = message.authorId;
+        userId = message.userId;
         mediaUrl = message.mediaUrl;
         mediaType = message.mediaType;
         mediaSize = message.mediaSize;
@@ -126,7 +126,7 @@ public class MessageDto implements Serializable, Comparable<MessageDto> {
 
     public void update(final MessageDto rhs) {
         id = rhs.id;
-        name = rhs.name;
+        displayName = rhs.displayName;
         role = rhs.role;
         text = rhs.text;
         textFallback = rhs.textFallback;
@@ -135,7 +135,7 @@ public class MessageDto implements Serializable, Comparable<MessageDto> {
         payload = rhs.payload;
         metadata = rhs.metadata;
         received = rhs.received;
-        authorId = rhs.authorId;
+        userId = rhs.userId;
         mediaUrl = rhs.mediaUrl;
         mediaType = rhs.mediaType;
         mediaSize = rhs.mediaSize;
@@ -180,12 +180,12 @@ public class MessageDto implements Serializable, Comparable<MessageDto> {
         this.messageItems = items;
     }
 
-    public String getAuthorId() {
-        return authorId;
+    public String getUserId() {
+        return userId;
     }
 
-    public void setAuthorId(final String authorId) {
-        this.authorId = authorId;
+    public void setUserId(final String userId) {
+        this.userId = userId;
     }
 
     public String getAvatarUrl() {
@@ -220,12 +220,12 @@ public class MessageDto implements Serializable, Comparable<MessageDto> {
         this.mediaSize = mediaSize;
     }
 
-    public String getName() {
-        return name;
+    public String getDisplayName() {
+        return displayName;
     }
 
-    public void setName(final String name) {
-        this.name = name;
+    public void setDisplayName(final String displayName) {
+        this.displayName = displayName;
     }
 
     public String getText() {

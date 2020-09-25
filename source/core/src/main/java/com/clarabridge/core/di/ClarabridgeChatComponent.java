@@ -3,8 +3,11 @@ package com.clarabridge.core.di;
 import android.app.Application;
 import android.os.Handler;
 
+import androidx.annotation.Nullable;
+
 import dagger.BindsInstance;
 import dagger.Component;
+import com.clarabridge.core.AuthenticationDelegate;
 import com.clarabridge.core.Settings;
 import com.clarabridge.core.facade.PersistenceFacade;
 import com.clarabridge.core.network.ClarabridgeChatApiClient;
@@ -42,6 +45,9 @@ public interface ClarabridgeChatComponent {
     PersistenceFacade persistenceFacade();
 
     ClarabridgeChatApiClient clarabridgeChatApiClient();
+
+    @Nullable
+    AuthenticationDelegate authenticationDelegate();
 
     ConversationManager conversationManager();
 

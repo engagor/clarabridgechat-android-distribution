@@ -1,37 +1,41 @@
 package com.clarabridge.core.model;
 
+import com.google.gson.annotations.SerializedName;
+
 /**
  * A request model to login a user in the backend.
  */
 public class PostLoginDto {
 
-    private final String appUserId;
-    private final String sessionToken;
+    @SerializedName("appUserId")
     private final String userId;
+    private final String sessionToken;
+    @SerializedName("userId")
+    private final String externalId;
     private final ClientDto client;
 
     public PostLoginDto(
-            String appUserId,
-            String sessionToken,
             String userId,
+            String sessionToken,
+            String externalId,
             ClientDto client) {
 
-        this.appUserId = appUserId;
-        this.sessionToken = sessionToken;
         this.userId = userId;
+        this.sessionToken = sessionToken;
+        this.externalId = externalId;
         this.client = client;
     }
 
-    public String getAppUserId() {
-        return appUserId;
+    public String getUserId() {
+        return userId;
     }
 
     public String getSessionToken() {
         return sessionToken;
     }
 
-    public String getUserId() {
-        return userId;
+    public String getExternalId() {
+        return externalId;
     }
 
     public ClientDto getClient() {
@@ -49,13 +53,13 @@ public class PostLoginDto {
 
         PostLoginDto that = (PostLoginDto) o;
 
-        if (appUserId != null ? !appUserId.equals(that.appUserId) : that.appUserId != null) {
+        if (userId != null ? !userId.equals(that.userId) : that.userId != null) {
             return false;
         }
         if (sessionToken != null ? !sessionToken.equals(that.sessionToken) : that.sessionToken != null) {
             return false;
         }
-        if (userId != null ? !userId.equals(that.userId) : that.userId != null) {
+        if (externalId != null ? !externalId.equals(that.externalId) : that.externalId != null) {
             return false;
         }
         return client != null ? client.equals(that.client) : that.client == null;
@@ -63,9 +67,9 @@ public class PostLoginDto {
 
     @Override
     public int hashCode() {
-        int result = appUserId != null ? appUserId.hashCode() : 0;
+        int result = userId != null ? userId.hashCode() : 0;
         result = 31 * result + (sessionToken != null ? sessionToken.hashCode() : 0);
-        result = 31 * result + (userId != null ? userId.hashCode() : 0);
+        result = 31 * result + (externalId != null ? externalId.hashCode() : 0);
         result = 31 * result + (client != null ? client.hashCode() : 0);
         return result;
     }

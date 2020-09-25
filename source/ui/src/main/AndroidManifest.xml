@@ -27,9 +27,16 @@
         <activity
             android:name=".ConversationActivity"
             android:configChanges="orientation|screenSize"
-            android:label="@string/ClarabridgeChat_activityConversation"
             android:launchMode="singleTask"
             android:theme="@style/Theme.ClarabridgeChat" />
+
+        <activity
+            android:name="com.clarabridge.features.conversationlist.ConversationListActivity"
+            android:configChanges="orientation|screenSize"
+            android:label="@string/ClarabridgeChat_conversationListNavBar"
+            android:launchMode="singleTask"
+            android:theme="@style/Theme.ClarabridgeChat" />
+
         <activity
             android:name=".widget.ImageActivity"
             android:theme="@style/Theme.AppCompat.NoActionBar.FullScreen" />
@@ -43,7 +50,7 @@
         </receiver>
 
         <provider
-            android:name="android.support.v4.content.FileProvider"
+            android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.CLARABRIDGECHAT_FILE_PROVIDER"
             android:exported="false"
             android:grantUriPermissions="true">

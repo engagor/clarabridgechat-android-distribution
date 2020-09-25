@@ -1,7 +1,7 @@
 package com.clarabridge.core;
 
 import android.content.Intent;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 /**
  * Delegate for events related to the conversation view.
@@ -26,4 +26,17 @@ public interface ConversationViewDelegate {
      * @param permissions The list of permissions requested
      */
     void onRequestPermissionsCalled(@NonNull String[] permissions);
+
+    /**
+     * Notifies the ConverstationListActivity that the conversation activity create intent
+     * should be sent to the interceptor
+     *
+     * @return true if you want to intercept the conversation activity create intent
+     */
+    boolean shouldCreateCustomConversationFlow();
+
+    /**
+     * Called when a new conversation is selected
+     */
+    void onCreateConversationClick();
 }

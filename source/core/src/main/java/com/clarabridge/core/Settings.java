@@ -1,6 +1,6 @@
 package com.clarabridge.core;
 
-import android.support.annotation.Nullable;
+import androidx.annotation.Nullable;
 
 /**
  * The settings used to initialise the SDK.
@@ -10,6 +10,7 @@ public class Settings {
     private final String integrationId;
     @Nullable
     private final String authCode;
+
     private boolean firebaseCloudMessagingAutoRegistrationEnabled;
     @Nullable
     private String serviceBaseUrl;
@@ -33,15 +34,15 @@ public class Settings {
 
     /**
      * Initializes a {@link Settings} instance with the given app id, integration id and auth code
+     * flag.
      *
-     * @param integrationId A valid integration id retrieved from the ClarabridgeChat web portal
-     * @param authCode      A valid auth code retrieved from the ClarabridgeChat API to authenticate as an
-     *                      existing user
+     * @param integrationId     A valid integration id retrieved from the ClarabridgeChat web portal
+     * @param authCode          A valid auth code retrieved from the ClarabridgeChat API to authenticate as an
+     *                          existing user
      */
     public Settings(final String integrationId, @Nullable final String authCode) {
         this.integrationId = integrationId;
         this.authCode = authCode;
-
         this.firebaseCloudMessagingAutoRegistrationEnabled = true;
     }
 

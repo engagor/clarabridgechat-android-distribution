@@ -1,6 +1,6 @@
 package com.clarabridge.core.facade;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 /**
  * Used for determining which IDs should be used to generate file names for storage

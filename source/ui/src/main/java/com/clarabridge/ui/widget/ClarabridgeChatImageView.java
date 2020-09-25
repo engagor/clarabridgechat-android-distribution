@@ -10,7 +10,7 @@ import android.util.AttributeSet;
 
 import com.clarabridge.ui.R;
 
-public class ClarabridgeChatImageView extends android.support.v7.widget.AppCompatImageView {
+public class ClarabridgeChatImageView extends androidx.appcompat.widget.AppCompatImageView {
     public static final int ROUNDED_CORNER_NONE = 1;
     public static final int ROUNDED_CORNER_TOP_RIGHT = 1 << 1;
     public static final int ROUNDED_CORNER_TOP_LEFT = 1 << 2;

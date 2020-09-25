@@ -9,13 +9,13 @@ import com.google.gson.annotations.SerializedName;
 class WsParticipantDto {
 
     @SerializedName("appUserId")
-    private final String appUserId;
+    private final String userId;
 
-    WsParticipantDto(String appUserId) {
-        this.appUserId = appUserId;
+    WsParticipantDto(String userId) {
+        this.userId = userId;
     }
 
-    String getAppUserId() {
-        return appUserId;
+    String getUserId() {
+        return userId;
     }
 }

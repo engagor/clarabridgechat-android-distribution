@@ -1,7 +1,7 @@
 package com.clarabridge.core;
 
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import java.io.Serializable;
 import java.util.Date;
@@ -50,15 +50,15 @@ public final class ConversationEvent implements Serializable {
      * Available for {@link ConversationEventType#CONVERSATION_READ}, {@link ConversationEventType#TYPING_START}
      * and {@link ConversationEventType#TYPING_STOP} if they were triggered by another app user.
      *
-     * @return the app user ID if available, null otherwise
+     * @return the user ID if available, null otherwise
      */
     @Nullable
-    public String getAppUserId() {
-        return entity.getAppUserId();
+    public String getUserId() {
+        return entity.getUserId();
     }
 
     /**
-     * Returns the role of the participant related to this event (typically "appUser" or "appMaker") if this
+     * Returns the role of the participant related to this event (typically "appUser" or "business") if this
      * event type is {@link ConversationEventType#CONVERSATION_READ}, {@link ConversationEventType#TYPING_START}
      * or {@link ConversationEventType#TYPING_STOP}.
      *

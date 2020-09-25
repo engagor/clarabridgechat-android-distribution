@@ -1,6 +1,6 @@
 package com.clarabridge.core.model;
 
-import android.support.annotation.Nullable;
+import androidx.annotation.Nullable;
 
 /**
  * A request model to be sent when making Stripe related requests, like charging or storing a token.

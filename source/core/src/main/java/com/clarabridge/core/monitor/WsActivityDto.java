@@ -1,6 +1,8 @@
 package com.clarabridge.core.monitor;
 
-import android.support.annotation.Nullable;
+import androidx.annotation.Nullable;
+
+import com.google.gson.annotations.SerializedName;
 
 import com.clarabridge.core.model.ConversationEventDataDto;
 
@@ -14,17 +16,18 @@ class WsActivityDto {
     private final String type;
     private final ConversationEventDataDto data;
     @Nullable
-    private final String appUserId;
+    @SerializedName("appUserId")
+    private final String userId;
 
     WsActivityDto(
             String role,
             String type,
             ConversationEventDataDto data,
-            @Nullable String appUserId) {
+            @Nullable String userId) {
         this.role = role;
         this.type = type;
         this.data = data;
-        this.appUserId = appUserId;
+        this.userId = userId;
     }
 
     String getRole() {
@@ -44,7 +47,7 @@ class WsActivityDto {
      * null if it was triggered by the app maker
      */
     @Nullable
-    public String getAppUserId() {
-        return appUserId;
+    public String getUserId() {
+        return userId;
     }
 }

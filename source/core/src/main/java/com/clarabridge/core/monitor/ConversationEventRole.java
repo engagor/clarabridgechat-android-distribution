@@ -1,6 +1,6 @@
 package com.clarabridge.core.monitor;
 
-import android.support.annotation.Nullable;
+import androidx.annotation.Nullable;
 
 import com.clarabridge.core.utils.ValueEnum;
 import com.clarabridge.core.utils.ValueIndex;
@@ -14,7 +14,7 @@ public enum ConversationEventRole implements ValueEnum {
     /**
      * When a WebSocket message is authored by the "appMaker", the business that owns the app.
      */
-    APP_MAKER("appMaker"),
+    BUSINESS("appMaker"),
 
     /**
      * When a WebSocket message is authored by an "appUser".

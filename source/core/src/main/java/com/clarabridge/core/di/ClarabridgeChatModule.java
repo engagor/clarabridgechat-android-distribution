@@ -1,6 +1,6 @@
 package com.clarabridge.core.di;
 
-import android.support.annotation.Nullable;
+import androidx.annotation.Nullable;
 
 import dagger.Binds;
 import dagger.Module;

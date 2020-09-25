@@ -50,9 +50,34 @@
     <string name="ClarabridgeChat_messageStatusSeen">Seen</string>
     <string name="ClarabridgeChat_retrievingFile">Retrieving your file…</string>
     <string name="ClarabridgeChat_notificationFallbackText">Sent a message</string>
+    <string name="ClarabridgeChat_conversationListEmpty">No Conversations</string>
+    <string name="ClarabridgeChat_conversationLastUpdatedMinute">1 minute ago</string>
+    <string name="ClarabridgeChat_conversationLastUpdatedMinutes">%d minutes ago</string>
+    <string name="ClarabridgeChat_conversationLastUpdatedHour">1 hour ago</string>
+    <string name="ClarabridgeChat_conversationLastUpdatedHours">%d hours ago</string>
+    <string name="ClarabridgeChat_conversationLastUpdatedYesterday">Yesterday</string>
+    <string name="ClarabridgeChat_conversationListError">Unable to load conversations</string>
+    <string name="ClarabridgeChat_btnRetry">Retry</string>
+    <string name="ClarabridgeChat_conversationListLastNoMessages">No messages</string>
+    <string name="ClarabridgeChat_conversationListLastSentByCurrentUser">You</string>
+    <string name="ClarabridgeChat_conversationListLastMessageImage">%s sent an image</string>
+    <string name="ClarabridgeChat_conversationListLastMessageFile">%s sent a file</string>
+    <string name="ClarabridgeChat_conversationListLastMessageForm">%s sent a form</string>
+    <string name="ClarabridgeChat_conversationListLastMessageDefault">%s sent a message</string>
+    <string name="ClarabridgeChat_badgeCountMoreThanOneDigit">9+</string>
+    <string name="ClarabridgeChat_conversationListNavBar">My conversations</string>
+    <string name="ClarabridgeChat_btnNewConversation">New Conversation</string>
     <plurals name="ClarabridgeChat_unreadMessagesText">
         <item quantity="one">%d unread message</item>
         <item quantity="other">%d unread messages</item>
+    </plurals>
+    <plurals name="ClarabridgeChat_conversationLastUpdatedMinutes">
+        <item quantity="one">%d minute ago</item>
+        <item quantity="other">%d minutes ago</item>
+    </plurals>
+    <plurals name="ClarabridgeChat_conversationLastUpdatedHours">
+        <item quantity="one">%d hour ago</item>
+        <item quantity="other">%d hours ago</item>
     </plurals>
 </resources>
 

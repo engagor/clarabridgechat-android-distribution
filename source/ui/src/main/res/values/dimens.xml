@@ -10,6 +10,8 @@
     <dimen name="ClarabridgeChat_btnActionRadius">5dp</dimen>
     <dimen name="ClarabridgeChat_btnActionText">15sp</dimen>
     <dimen name="ClarabridgeChat_btnIconSize">30dp</dimen>
+    <dimen name="ClarabridgeChat_actionBarIconSize">36dp</dimen>
+    <dimen name="ClarabridgeChat_actionBarIconPadding">12dp</dimen>
     <dimen name="ClarabridgeChat_btnIconMargin">6dp</dimen>
     <dimen name="ClarabridgeChat_btnMenuSize">23dp</dimen>
     <dimen name="ClarabridgeChat_replyActionBorder">2dp</dimen>
@@ -53,5 +55,14 @@
     <dimen name="ClarabridgeChat_typingIndicatorSize">10dp</dimen>
     <dimen name="ClarabridgeChat_typingIndicatorSeparatorPadding">2dp</dimen>
     <dimen name="ClarabridgeChat_unreadCountMarginHorizontal">12dp</dimen>
+    <dimen name="ClarabridgeChat_conversationListItemMargin">16dp</dimen>
+    <dimen name="ClarabridgeChat_conversationListAvatar">40dp</dimen>
+    <dimen name="ClarabridgeChat_conversationListAvatarPadding">4dp</dimen>
+    <dimen name="ClarabridgeChat_unread_badge_size">16dp</dimen>
+    <dimen name="ClarabridgeChat_unread_badge_text_size">12sp</dimen>
+    <dimen name="ClarabridgeChat_unread_badge_padding">4dp</dimen>
+    <dimen name="ClarabridgeChat_btnNewConversationRadius">24dp</dimen>
+    <dimen name="ClarabridgeChat_btnNewConversationText">14sp</dimen>
+    <dimen name="ClarabridgeChat_actionBarTitleText">20sp</dimen>
 </resources>
 

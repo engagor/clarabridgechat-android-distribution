@@ -1,13 +1,14 @@
 package com.clarabridge.ui;
 
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
-import android.support.annotation.NonNull;
-import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentTransaction;
-import android.support.v7.app.ActionBar;
-import android.support.v7.app.AppCompatActivity;
+import androidx.annotation.NonNull;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
+import androidx.appcompat.app.ActionBar;
+import androidx.appcompat.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -21,6 +22,7 @@ import com.clarabridge.core.Config;
 import com.clarabridge.core.Conversation;
 import com.clarabridge.core.ConversationDelegate;
 import com.clarabridge.core.ConversationEvent;
+import com.clarabridge.core.ConversationViewDelegate;
 import com.clarabridge.core.InitializationStatus;
 import com.clarabridge.core.LoginResult;
 import com.clarabridge.core.LogoutResult;
@@ -29,6 +31,7 @@ import com.clarabridge.core.MessageAction;
 import com.clarabridge.core.MessageUploadStatus;
 import com.clarabridge.core.PaymentStatus;
 import com.clarabridge.core.ClarabridgeChat;
+import com.clarabridge.core.ClarabridgeChatCallback;
 import com.clarabridge.core.ClarabridgeChatConnectionStatus;
 import com.clarabridge.ui.fragment.ConversationFragment;
 import com.clarabridge.ui.fragment.ShaderFragment;
@@ -43,6 +46,7 @@ public class ConversationActivity extends AppCompatActivity implements Conversat
     private static final String CONVERSATION_FRAGMENT = "ConversationFragment";
     private static final String STRIPE_FRAGMENT = "StripeFragment";
     private static final String SHADER_FRAGMENT = "ShaderFragment";
+    private static final int CONVERSATION_ACTIVITY_DELEGATE = 10;
 
     private static ConversationActivity runningActivity;
 
@@ -70,7 +74,6 @@ public class ConversationActivity extends AppCompatActivity implements Conversat
      * <p>
      * Ignored if the conversation is not running.
      */
-    @SuppressWarnings("unused")
     public static void close() {
         if (runningActivity != null) {
             runningActivity.finish();
@@ -88,6 +91,10 @@ public class ConversationActivity extends AppCompatActivity implements Conversat
         stripeFragment = (StripeFragment) manager.findFragmentByTag(STRIPE_FRAGMENT);
         shaderFragment = (ShaderFragment) manager.findFragmentByTag(SHADER_FRAGMENT);
 
+        final ConversationViewDelegate viewDelegate = ClarabridgeChat.getConversationViewDelegate();
+        if (viewDelegate != null) {
+            viewDelegate.onStartActivityCalled(getIntent());
+        }
         setup();
     }
 
@@ -143,7 +150,7 @@ public class ConversationActivity extends AppCompatActivity implements Conversat
     public void onResume() {
         super.onResume();
 
-        ClarabridgeChat.setConversationUiDelegate(this);
+        ClarabridgeChat.addConversationUiDelegate(CONVERSATION_ACTIVITY_DELEGATE, this);
 
         if (stripeShouldBePopped) {
             popStripeAfterSeconds(3);
@@ -154,18 +161,13 @@ public class ConversationActivity extends AppCompatActivity implements Conversat
     public void onPause() {
         super.onPause();
 
-        ClarabridgeChat.setConversationUiDelegate(null);
+        ClarabridgeChat.addConversationUiDelegate(CONVERSATION_ACTIVITY_DELEGATE, null);
     }
 
     @Override
     public void onStart() {
         super.onStart();
-
-        conversation = ClarabridgeChat.getConversation();
-
-        if (conversation != null) {
-            conversation.clarabridgeChatShown();
-        }
+        showConversationFragment();
     }
 
     @Override
@@ -185,17 +187,37 @@ public class ConversationActivity extends AppCompatActivity implements Conversat
 
             conversationFragment = new ConversationFragment();
 
-            String startingText = getIntent().getStringExtra(ConversationActivityBuilder.INTENT_STARTING_TEXT);
+            final Intent intent = getIntent();
+            final String startingText = intent.getStringExtra(ConversationActivityBuilder.INTENT_STARTING_TEXT);
+            final String conversationId = intent.getStringExtra(ConversationActivityBuilder.INTENT_CONVERSATION_ID);
 
             if (startingText != null) {
                 conversationFragment.setStartingText(startingText);
             }
 
             fragmentTx.add(R.id.clarabridgechat_activity_fragment_container, conversationFragment, CONVERSATION_FRAGMENT);
-            fragmentTx.commit();
-        }
 
-        addShaderFragment();
+            if (conversationId != null) {
+                ClarabridgeChat.loadConversation(conversationId, new ClarabridgeChatCallback<Conversation>() {
+                    @Override
+                    public void run(@NonNull Response<Conversation> response) {
+                        Conversation loadedConversation = response.getData();
+                        if (loadedConversation != null) {
+                            conversation = loadedConversation;
+                            fragmentTx.commit();
+                            addShaderFragment();
+                        }
+                    }
+                });
+            } else {
+                conversation = ClarabridgeChat.getConversation();
+                if (conversation != null) {
+                    conversation.clarabridgeChatShown();
+                    fragmentTx.commit();
+                    addShaderFragment();
+                }
+            }
+        }
     }
 
     private void showStripeFragment(final MessageAction action) {
@@ -237,7 +259,6 @@ public class ConversationActivity extends AppCompatActivity implements Conversat
             actionBar.setDisplayShowHomeEnabled(true);
         }
 
-        showConversationFragment();
     }
 
     private boolean stripeFragmentShown() {

@@ -14,7 +14,7 @@ import com.bumptech.glide.Glide;
 import com.clarabridge.ui.R;
 import com.clarabridge.ui.utils.BitmapVisitor;
 
-public class AvatarImageView extends android.support.v7.widget.AppCompatImageView {
+public class AvatarImageView extends androidx.appcompat.widget.AppCompatImageView {
     private Bitmap defaultAvatarBitmap;
     private BitmapDrawable defaultAvatarPlaceholder;
 

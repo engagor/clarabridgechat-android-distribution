@@ -14,7 +14,7 @@ const argv = require('yargs')
 const projectFolder = path.join(__dirname, '..');
 
 const isWhitelabel = argv.whitelabel;
-const version = isWhitelabel ? '1.0.0' : argv.buildVersion;
+const version = isWhitelabel ? '2.0.0' : argv.buildVersion;
 
 (async function () {
   const bintrayProps = {};

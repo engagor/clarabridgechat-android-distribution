@@ -1,9 +1,9 @@
 package com.clarabridge.core;
 
 import android.graphics.Bitmap;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.annotation.RestrictTo;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -46,6 +46,11 @@ public final class Message implements Serializable, Comparable<Message> {
         if (entity.getCreated() == null) {
             entity.setCreated(((double) System.currentTimeMillis()) / 1000.0);
         }
+
+        ClarabridgeChatInternal clarabridgeChatInternal = ClarabridgeChat.getInstance();
+        if (entity.getUserId() != null && clarabridgeChatInternal != null) {
+            entity.setIsFromCurrentUser(entity.getUserId().equals(clarabridgeChatInternal.getUserId()));
+        }
     }
 
     Message() {
@@ -53,7 +58,7 @@ public final class Message implements Serializable, Comparable<Message> {
         ClarabridgeChatInternal clarabridgeChatInternal = ClarabridgeChat.getInstance();
 
         if (clarabridgeChatInternal != null) {
-            entity.setAuthorId(clarabridgeChatInternal.getAppUserId());
+            entity.setUserId(clarabridgeChatInternal.getUserId());
         }
 
         entity.setRole("appUser");
@@ -133,7 +138,7 @@ public final class Message implements Serializable, Comparable<Message> {
     }
 
     /**
-     * The url for the author's avatar image.
+     * The url for the user's avatar image.
      *
      * @return The url
      */
@@ -146,26 +151,26 @@ public final class Message implements Serializable, Comparable<Message> {
     }
 
     /**
-     * The id for the author.
+     * The id for the user.
      *
      * @return The id
      */
     @Nullable
-    public String getAuthorId() {
+    public String getUserId() {
         if (!isFromCurrentUser()) {
-            return entity.getAuthorId();
+            return entity.getUserId();
         }
 
         return null;
     }
 
     /**
-     * The Role for the author.
+     * The Role for the user.
      *
      * @return The Role
      */
     @Nullable
-    public String getAuthorRole() {
+    public String getUserRole() {
         if (!isFromCurrentUser()) {
             return entity.getRole();
         }
@@ -174,9 +179,9 @@ public final class Message implements Serializable, Comparable<Message> {
     }
 
     /**
-     * Sets the url for the author's avatar image.
+     * Sets the url for the user's avatar image.
      *
-     * @param avatarUrl the url for the author's avatar image
+     * @param avatarUrl the url for the user's avatar image
      */
     public void setAvatarUrl(String avatarUrl) {
         if (!isFromCurrentUser()) {
@@ -261,19 +266,19 @@ public final class Message implements Serializable, Comparable<Message> {
     }
 
     /**
-     * The name of the author. This property may be null if no name could be determined.
+     * The display name of the user. This property may be null if no display name could be determined.
      *
-     * @return The name
+     * @return The displayName
      */
     public String getName() {
-        return entity.getName();
+        return entity.getDisplayName();
     }
 
     /**
-     * Sets the author's name for the message.
+     * Sets the user's displayName for the message.
      */
-    public void setName(String name) {
-        entity.setName(name);
+    public void setName(String displayName) {
+        entity.setDisplayName(displayName);
     }
 
     /**
@@ -508,7 +513,7 @@ public final class Message implements Serializable, Comparable<Message> {
         return entity != null ? entity.hashCode() : 0;
     }
 
-    @android.support.annotation.RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    @androidx.annotation.RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public MessageDto getEntity() {
         return entity;
     }

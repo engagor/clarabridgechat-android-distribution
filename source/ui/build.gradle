@@ -15,9 +15,10 @@ buildscript {
 group = "com.clarabridge"
 
 apply plugin: "com.android.library"
+apply plugin: "kotlin-android"
 apply plugin: "com.github.dcendents.android-maven"
 
-def versionMajor = 1
+def versionMajor = 2
 def versionMinor = 0
 def versionPatch = 0
 def versionBuild = 0 // bump for dogfood builds, public betas, etc.
@@ -51,6 +52,14 @@ android {
     lintOptions {
         abortOnError false
     }
+
+    testOptions {
+        unitTests.returnDefaultValues = true
+    }
+
+    sourceSets {
+        test.java.srcDirs += "src/test/kotlin"
+    }
 }
 
 install {
@@ -67,27 +76,32 @@ install {
 
 def glideVersion = "4.9.0" // Limited by androidx
 def playServicesVersion = "16.0.0" // Limited by androidx
-def supportLibraryVersion = "28.0.0" // Limited by androidx
 def subsamplingScaleImageViewVersion = "3.10.0"
 
 dependencies {
     implementation fileTree(dir: "libs", include: ["*.jar"])
 
     implementation "com.github.bumptech.glide:glide:${glideVersion}"
-    implementation "com.android.support:support-v4:${supportLibraryVersion}"
-    implementation "com.android.support:appcompat-v7:${supportLibraryVersion}"
-    implementation "com.android.support:exifinterface:${supportLibraryVersion}"
-    implementation "com.android.support:recyclerview-v7:${supportLibraryVersion}"
-    implementation "com.android.support:support-media-compat:${supportLibraryVersion}"
+    implementation 'androidx.legacy:legacy-support-v4:1.0.0'
+    implementation 'androidx.appcompat:appcompat:1.2.0'
+    implementation 'androidx.exifinterface:exifinterface:1.2.0'
+    implementation 'androidx.recyclerview:recyclerview:1.1.0'
+    implementation 'androidx.media:media:1.1.0'
     implementation "com.google.android.gms:play-services-location:${playServicesVersion}"
     implementation "com.davemorrissey.labs:subsampling-scale-image-view:${subsamplingScaleImageViewVersion}"
+
+    testImplementation "junit:junit:4.12"
+    testImplementation "org.mockito:mockito-inline:3.3.0"
+    testImplementation "com.google.truth:truth:1.0.1"
+    testImplementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:${versions.kotlin}"
 
     api project(":core")
 }
 
 task javadoc(type: Javadoc) {
+    failOnError false
     source = android.sourceSets.main.java.srcDirs
-    source += fileTree(dir: "../core/src/main/java/")
+    source += fileTree(dir: "../core/src/main/java/") + fileTree(dir: "../ui/src/main/java/")
     classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
     include "com/clarabridge/core/*"
     include "com/clarabridge/ui/*"

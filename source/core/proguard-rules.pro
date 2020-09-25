@@ -60,6 +60,7 @@
 -keep public class com.clarabridge.core.ConversationEvent { public *; }
 -keep public enum com.clarabridge.core.ConversationEventType { public *; }
 -keep public interface com.clarabridge.core.ConversationViewDelegate { *; }
+-keep public class com.clarabridge.core.ConversationViewDelegateAdapter { *; }
 -keep public class com.clarabridge.core.Coordinates { public *; }
 -keep public class com.clarabridge.core.CreditCard { public *; }
 -keep public class com.clarabridge.core.DisplaySettings { public *; }
@@ -73,6 +74,7 @@
 -keep public class com.clarabridge.core.MessageAction { public *; }
 -keep public class com.clarabridge.core.MessageItem { public *; }
 -keep public interface com.clarabridge.core.MessageModifierDelegate { *; }
+-keep public class com.clarabridge.core.ConversationDelegateAdapter { *; }
 -keep public class com.clarabridge.core.MessageType { public *; }
 -keep public enum com.clarabridge.core.MessageUploadStatus { public *; }
 -keep public class com.clarabridge.core.Participant { public *; }
@@ -85,6 +87,9 @@
 -keep public class com.clarabridge.core.User { public *; }
 -keep public class com.clarabridge.core.utils.FileUtils { public *; }
 -keep public class com.clarabridge.core.utils.StringUtils { public *; }
+-keep public class com.clarabridge.core.utils.JavaUtils { public *; }
+-keep public class com.clarabridge.core.ClarabridgeChatCallback { public *; }
+-keep public class com.clarabridge.core.ClarabridgeChatCallback$* { public *; }
 
 -dontnote com.clarabridge.core.Notifier
 

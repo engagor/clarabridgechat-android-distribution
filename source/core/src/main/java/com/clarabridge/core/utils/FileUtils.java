@@ -28,17 +28,18 @@ import android.os.Build;
 import android.os.Environment;
 import android.provider.DocumentsContract;
 import android.provider.MediaStore;
-import android.support.annotation.RequiresApi;
-import android.support.annotation.RestrictTo;
 import android.text.TextUtils;
 import android.util.Log;
 import android.webkit.MimeTypeMap;
+
+import androidx.annotation.RequiresApi;
+import androidx.annotation.RestrictTo;
 
 import java.io.File;
 
 import com.clarabridge.core.BuildConfig;
 
-@android.support.annotation.RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+@androidx.annotation.RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class FileUtils {
     private FileUtils() {
     }
@@ -216,6 +217,8 @@ public class FileUtils {
             contentUri = MediaStore.Video.Media.EXTERNAL_CONTENT_URI;
         } else if ("audio".equals(type)) {
             contentUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
+        } else {
+            contentUri = uri;
         }
 
         final String selection = "_id=?";

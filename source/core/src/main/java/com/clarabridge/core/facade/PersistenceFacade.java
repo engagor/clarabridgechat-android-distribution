@@ -1,9 +1,10 @@
 package com.clarabridge.core.facade;
 
 import android.content.Context;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.annotation.VisibleForTesting;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.VisibleForTesting;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -48,7 +49,7 @@ public class PersistenceFacade {
     @Nullable
     private String integrationId;
     private String appId;
-    private String appUserId;
+    private String userId;
     @Nullable
     private String stripeKey;
 
@@ -102,7 +103,7 @@ public class PersistenceFacade {
         this.cache = PersistenceCache.create();
         if (!StringUtils.isEmpty(appId)) {
             this.appId = appId;
-            this.appUserId = getAppUserId();
+            this.userId = getUserId();
         }
     }
 
@@ -178,17 +179,17 @@ public class PersistenceFacade {
     }
 
     @Nullable
-    public String getAppUserId() {
+    public String getUserId() {
         return getPersistence(StorageScope.APP_ID, Type.SHARED_PREFERENCES).get(APP_USER_ID_KEY, String.class);
     }
 
-    public void saveAppUserId(@Nullable final String appUserId) {
-        if (appUserId == null) {
+    public void saveUserId(@Nullable final String userId) {
+        if (userId == null) {
             clearByScope(StorageScope.USER_ID);
         }
         this.cache = PersistenceCache.create();
-        this.appUserId = appUserId;
-        getPersistence(StorageScope.APP_ID, Type.SHARED_PREFERENCES).put(APP_USER_ID_KEY, appUserId);
+        this.userId = userId;
+        getPersistence(StorageScope.APP_ID, Type.SHARED_PREFERENCES).put(APP_USER_ID_KEY, userId);
     }
 
     @Nullable
@@ -236,15 +237,21 @@ public class PersistenceFacade {
     @NonNull
     public List<ConversationDto> getConversationsList() {
         List<ConversationDto> conversationsList = cache.getConversationsList();
-        if (conversationsList == null) {
-            ConversationsListResponseDto persistedList = getPersistence(StorageScope.USER_ID, Type.FILE)
-                    .get(CONVERSATIONS_LIST_KEY, ConversationsListResponseDto.class);
-            conversationsList = (persistedList != null && persistedList.getConversations() != null)
-                    ? persistedList.getConversations()
-                    : new ArrayList<ConversationDto>();
+        if (conversationsList.isEmpty()) {
+            conversationsList = getConversationListFromFileStorage();
             cache.saveConversationsList(conversationsList);
         }
         return conversationsList;
+    }
+
+    /**
+     * @param toIndex The index in which we want to get the list of conversations according to it.
+     * @return the stored list of conversations withing a given offset or an empty list if the result was null
+     */
+    @NonNull
+    public List<ConversationDto> getConversationsList(int toIndex) {
+        List<ConversationDto> conversationsList = cache.getConversationsList(toIndex);
+        return conversationsList.isEmpty() ? new ArrayList<ConversationDto>() : conversationsList;
     }
 
     /**
@@ -253,9 +260,33 @@ public class PersistenceFacade {
      * @param conversationsList the list of {@link ConversationDto} to be stored
      */
     public void saveConversationsList(final List<ConversationDto> conversationsList) {
+        // Only the first most updated 10 conversations will be stored in the local file storage and all the list
+        // will be cached on memory.
         cache.saveConversationsList(conversationsList);
-        ConversationsListResponseDto persistedList = new ConversationsListResponseDto(conversationsList);
+        ConversationsListResponseDto persistedList =
+                new ConversationsListResponseDto(cache.getConversationsList(10));
         getPersistence(StorageScope.USER_ID, Type.FILE).put(CONVERSATIONS_LIST_KEY, persistedList);
+    }
+
+    /**
+     * Remove specific conversation from conversation list from on-memory cache and file storage.
+     *
+     * @param conversationId the conversation ID.
+     */
+    public void removeConversationFromConversationList(String conversationId) {
+        if (!cache.getConversationsList().isEmpty()) {
+            List<ConversationDto> cacheConversationList = cache.getConversationsList();
+            for (ConversationDto conversation : cacheConversationList) {
+                if (StringUtils.isEqual(conversation.getId(), conversationId)) {
+                    cache.removeConversationFromConversationList(conversation);
+
+                    ConversationsListResponseDto persistedList =
+                            new ConversationsListResponseDto(cache.getConversationsList());
+                    getPersistence(StorageScope.USER_ID, Type.FILE).put(CONVERSATIONS_LIST_KEY, persistedList);
+                    break;
+                }
+            }
+        }
     }
 
     /**
@@ -282,9 +313,79 @@ public class PersistenceFacade {
     public void saveConversationById(final String conversationId, final ConversationDto entity) {
         getPersistence(StorageScope.USER_ID, Type.FILE).put(conversationId, entity);
     }
+
+    /**
+     * Updates the given conversation entity by the given conversation ID
+     *
+     * @param conversationId the ID of the conversation being stored
+     * @param entity         the {@link ConversationDto} to be stored
+     */
+    public void updateConversation(final String conversationId, final ConversationDto entity) {
+        if (!cache.getConversationsList().isEmpty()) {
+            List<ConversationDto> cacheConversationList = cache.getConversationsList();
+            for (ConversationDto conversation : cacheConversationList) {
+                if (StringUtils.isEqual(conversation.getId(), conversationId)) {
+                    cache.removeConversationFromConversationList(conversation);
+                    cache.addConversationToConversationList(entity);
+                    saveConversationById(conversationId, entity);
+                    break;
+                }
+            }
+        }
+    }
+
+    /**
+     * Updates the given conversation entity by the given conversation ID
+     *
+     * @param conversationId the ID of the conversation being stored
+     * @param entity         the {@link ConversationDto} to be stored
+     */
+    public void addConversation(final String conversationId, final ConversationDto entity) {
+        boolean updated = false;
+        if (!cache.getConversationsList().isEmpty()) {
+            List<ConversationDto> cacheConversationList = cache.getConversationsList();
+            for (ConversationDto conversation : cacheConversationList) {
+                if (StringUtils.isEqual(conversation.getId(), conversationId)) {
+                    cache.removeConversationFromConversationList(conversation);
+                    cache.addConversationToConversationList(entity);
+                    saveConversationById(conversationId, entity);
+                    updated = true;
+                    break;
+                }
+            }
+
+            if (!updated) {
+                cache.addConversationToConversationList(entity);
+                saveConversationById(conversationId, entity);
+            }
+        }
+    }
+
+    /**
+     * Saves the hasMore we got from {@link com.clarabridge.core.model.ConversationsPaginationResponseDto} once
+     *
+     * @param hasMore is the boolean that indicates if there is more conversations to be fetched or not.
+     */
+    public void setHasMoreConversations(boolean hasMore) {
+        cache.setHasMoreConversations(hasMore);
+    }
+
+    /**
+     * @return if there is more conversations to be fetched or not.
+     */
+    public boolean isHasMoreConversations() {
+        return cache.isHasMoreConversations();
+    }
     // endregion
 
     // region Clear storage
+
+    /**
+     * Clear the conversation list that is cached on-memory
+     */
+    public void clearInMemoryCachedConversationList() {
+        cache.clearConversationList();
+    }
 
     /**
      * Clears all storage for all scopes
@@ -308,6 +409,20 @@ public class PersistenceFacade {
         }
     }
     // endregion
+
+    /**
+     * Only the first most updated 10 conversations will be stored in the local file storage so this method must only
+     * return the first most updated 10 conversations.
+     *
+     * @return the conversation list stored in the local file storage.
+     */
+    private List<ConversationDto> getConversationListFromFileStorage() {
+        ConversationsListResponseDto persistedList = getPersistence(StorageScope.USER_ID, Type.FILE)
+                .get(CONVERSATIONS_LIST_KEY, ConversationsListResponseDto.class);
+        return (persistedList != null && persistedList.getConversations() != null)
+                ? persistedList.getConversations()
+                : new ArrayList<ConversationDto>();
+    }
 
     /**
      * Retrieve an instance of {@link BaseStorage} appropriate for the {@link StorageScope}
@@ -343,7 +458,7 @@ public class PersistenceFacade {
             case UNSCOPED:
                 return StorageScope.UNSCOPED.getDirectoryName();
             case USER_ID:
-                return appId + ":" + StringUtils.encode(appUserId != null ? appUserId : TEMPORARY_STORAGE_NAME);
+                return appId + ":" + StringUtils.encode(userId != null ? userId : TEMPORARY_STORAGE_NAME);
             case APP_ID:
                 return appId != null ? appId : "null";
             default:

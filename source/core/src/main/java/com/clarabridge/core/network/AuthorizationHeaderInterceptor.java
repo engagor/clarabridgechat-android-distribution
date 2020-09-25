@@ -1,6 +1,6 @@
 package com.clarabridge.core.network;
 
-import android.support.annotation.Nullable;
+import androidx.annotation.Nullable;
 
 import javax.inject.Inject;
 
@@ -39,14 +39,14 @@ public class AuthorizationHeaderInterceptor extends HeaderInterceptor {
         }
 
         AppUserDto appUserDto = persistenceFacade.getAppUserRemote();
-        String appUserId = appUserDto == null ? null : appUserDto.getAppUserId();
         String userId = appUserDto == null ? null : appUserDto.getUserId();
+        String externalId = appUserDto == null ? null : appUserDto.getExternalId();
         String sessionToken = persistenceFacade.getSessionToken();
 
-        boolean isAnonymousUser = appUserId != null && sessionToken != null && userId == null;
+        boolean isAnonymousUser = userId != null && sessionToken != null && externalId == null;
 
         if (isAnonymousUser) {
-            return Credentials.basic(appUserId, sessionToken);
+            return Credentials.basic(userId, sessionToken);
         }
 
         return null;

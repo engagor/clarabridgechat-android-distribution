@@ -10,20 +10,21 @@ class WsConversationDto {
 
     @SerializedName("_id")
     private final String id;
-    private final Double appMakerLastRead;
+    @SerializedName("appMakerLastRead")
+    private final Double businessLastRead;
 
     WsConversationDto(
             String id,
-            Double appMakerLastRead) {
+            Double businessLastRead) {
         this.id = id;
-        this.appMakerLastRead = appMakerLastRead;
+        this.businessLastRead = businessLastRead;
     }
 
     String getId() {
         return id;
     }
 
-    Double getAppMakerLastRead() {
-        return appMakerLastRead;
+    Double getBusinessLastRead() {
+        return businessLastRead;
     }
 }

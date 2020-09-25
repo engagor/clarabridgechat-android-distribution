@@ -1,18 +1,21 @@
 package com.clarabridge.core;
 
 import android.app.Application;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.annotation.RestrictTo;
-import android.support.annotation.VisibleForTesting;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
+import androidx.annotation.VisibleForTesting;
 import android.util.Log;
 
 import java.io.IOException;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
+import com.clarabridge.core.utils.JavaUtils;
 import com.clarabridge.core.utils.ProcessName;
 import com.clarabridge.core.utils.StringUtils;
 
@@ -114,15 +117,15 @@ public final class ClarabridgeChat {
      * the user already logged in. Doing so will result in a no-op.
      * {@link #init(Application, Settings, ClarabridgeChatCallback)} must have been called prior to calling login.
      *
-     * @param userId   The distinct id of the user to login. Must not be null.
-     * @param jwt      jwt used to prove the origin of the login request. Must not be null.
-     * @param callback An optional {@link ClarabridgeChatCallback} instance to be notified of the result.
-     *                 Call {@link ClarabridgeChatCallback.Response#getData()} to check the {@link LoginResult}
+     * @param externalId The distinct id of the user to login. Must not be null.
+     * @param jwt        jwt used to prove the origin of the login request. Must not be null.
+     * @param callback   An optional {@link ClarabridgeChatCallback} instance to be notified of the result.
+     *                   Call {@link ClarabridgeChatCallback.Response#getData()} to check the {@link LoginResult}
      * @see ClarabridgeChatCallback
      * @see ClarabridgeChatCallback.Response
      * @see LoginResult
      */
-    public static void login(@NonNull final String userId,
+    public static void login(@NonNull final String externalId,
                              @NonNull final String jwt,
                              @Nullable ClarabridgeChatCallback<LoginResult> callback) {
 
@@ -133,15 +136,15 @@ public final class ClarabridgeChat {
         callback = ensureNonNull(callback);
 
         String errorMessage = null;
-        if (StringUtils.isEmpty(userId)) {
-            errorMessage = "Login called with null or empty userId. Call logout instead!";
+        if (StringUtils.isEmpty(externalId)) {
+            errorMessage = "Login called with null or empty externalId. Call logout instead!";
 
         } else if (StringUtils.isEmpty(jwt)) {
             errorMessage = "Login called with null or empty jwt. Ignoring!";
 
         } else if (getConversation() != null
                 && getConversation().isClarabridgeChatShown()
-                && !userId.equals(clarabridgeChatInternal.getUserId())) {
+                && !externalId.equals(clarabridgeChatInternal.getExternalId())) {
             errorMessage = "Login called while on the conversation screen. Ignoring!";
         }
 
@@ -154,7 +157,7 @@ public final class ClarabridgeChat {
             return;
         }
 
-        clarabridgeChatInternal.login(userId, jwt, callback);
+        clarabridgeChatInternal.login(externalId, jwt, callback);
     }
 
     /**
@@ -183,7 +186,19 @@ public final class ClarabridgeChat {
     }
 
     /**
-     * Force-start a conversation for the current user.
+     * @see #createConversation(String, String, String, List, Map, ClarabridgeChatCallback)
+     * <p>
+     * This method has been Deprecated. Use
+     * {@link #createConversation(String, String, String, List, Map, ClarabridgeChatCallback)}
+     * instead
+     */
+    @Deprecated
+    public static void startConversation(@Nullable ClarabridgeChatCallback<Void> callback) {
+        createConversation(null, null, null, Collections.<Message>emptyList(), null, callback);
+    }
+
+    /**
+     * Create a conversation for the current user.
      * <p>
      * Creates a user and conversation on the server, allowing the business to reach out proactively
      * to the user via the public API.
@@ -192,22 +207,41 @@ public final class ClarabridgeChat {
      * messages are exchanged or not, which may incur cost based on your plan. It is strongly
      * recommended to only call this method in the case where a message is likely to be sent.
      * <p>
+     * A List containing one {@link Message} can be passed in as well to add messages when the conversation is
+     * created.
+     * Only messages of type text are supported. Any other message type will cause an error.
+     * <p>
      * This method is called automatically when starting a conversation via the
      * {@link Conversation#sendMessage(Message)} or {@link Conversation#uploadImage(Message, ClarabridgeChatCallback)}
      * methods, or when a user sends a message via the conversation activity.
      * <p>
-     * If a conversation already exists for the current user, this call is a no-op.
      *
-     * @param callback An optional {@link ClarabridgeChatCallback} instance to be notified of the result.
+     * @param name        A user-friendly name to label the conversation in the list (max length 100).
+     * @param description A string describing the purpose of the conversation (max length 100).
+     * @param messages    A {@link List} of text {@link Message} to be sent when the conversation is created.
+     *                    Only messages of type text are supported. Any other message type will cause an error.
+     *                    The List can only contain one message.
+     * @param iconUrl     An iconUrl to display in the conversation list. It should be a valid icon URL.
+     * @param callback    An optional {@link ClarabridgeChatCallback} instance to be notified of the result.
+     * @param metadata    The conversation metadata (JSON Object)
      * @see ClarabridgeChatCallback
      * @see ClarabridgeChatCallback.Response
      */
-    public static void startConversation(@Nullable ClarabridgeChatCallback<Void> callback) {
+    public static void createConversation(@Nullable String name,
+                                          @Nullable String description,
+                                          @Nullable String iconUrl,
+                                          @Nullable List<Message> messages,
+                                          @Nullable Map<String, Object> metadata,
+                                          @Nullable ClarabridgeChatCallback<Void> callback) {
         if (!isInitialized()) {
             return;
         }
         callback = ensureNonNull(callback);
-        clarabridgeChatInternal.startConversation("conversation:start", callback);
+        if (messages == null) {
+            messages = Collections.emptyList();
+        }
+        clarabridgeChatInternal.createConversation("conversation:start", name, description, iconUrl, messages, metadata,
+                callback);
     }
 
     /**
@@ -242,6 +276,50 @@ public final class ClarabridgeChat {
             callback.run(callbackResponse);
         } else {
             clarabridgeChatInternal.loadConversation(conversationId, callback);
+        }
+    }
+
+    /**
+     * @param conversationId the conversationId
+     * @param name           A user-friendly name to label the conversation (max length 100 characters)
+     * @param description    A string describing the purpose of the conversation (max length 100 characters)
+     * @param iconUrl        An iconUrl to display in the conversation list
+     * @param metadata       The conversation metadata (JSON Object)
+     * @param callback       An optional {@link ClarabridgeChatCallback} instance to be notified of the result.
+     * @abstract Updates the specified conversation for the current user.
+     * <p>
+     * +initWithSettings:completionHandler: must have been called prior to calling this method.
+     * <p>
+     * If the name, description, iconUrl, and metadata parameters are all nil, this is a no-op.
+     * @see ClarabridgeChatCallback
+     * @see ClarabridgeChatCallback.Response
+     */
+    public static void updateConversationById(@NonNull String conversationId,
+                                              @Nullable String name,
+                                              @Nullable String description,
+                                              @Nullable String iconUrl,
+                                              @Nullable Map<String, Object> metadata,
+                                              @Nullable ClarabridgeChatCallback<Conversation> callback) {
+        if (!isInitialized()) {
+            return;
+        }
+
+        callback = ensureNonNull(callback);
+        if (StringUtils.isEmpty(conversationId)) {
+            ClarabridgeChatCallback.Response<Conversation> callbackResponse =
+                    new ClarabridgeChatCallback.Response.Builder<Conversation>(ERROR_STATUS)
+                            .withError("Update conversation called with null or empty conversationId. Ignoring!")
+                            .build();
+            callback.run(callbackResponse);
+        } else if (JavaUtils.allNull(name, description, iconUrl, metadata)) {
+            ClarabridgeChatCallback.Response<Conversation> callbackResponse =
+                    new ClarabridgeChatCallback.Response.Builder<Conversation>(ERROR_STATUS)
+                            .withError("Update conversation called with null values for name, description, iconUrl " +
+                                    "and metadata. Ignoring!")
+                            .build();
+            callback.run(callbackResponse);
+        } else {
+            clarabridgeChatInternal.updateConversationById(conversationId, name, description, iconUrl, metadata, callback);
         }
     }
 
@@ -341,6 +419,38 @@ public final class ClarabridgeChat {
         callback = ensureNonNull(callback);
 
         clarabridgeChatInternal.getConversationsList(callback);
+    }
+
+    /**
+     * Get the list of the 10 more recently active {@link Conversation}s for the current user, sorted
+     * from most recently updated to last.
+     * <p>
+     * Note that these conversations will only contain the most recent message for that conversation.
+     * Use {@link #getConversationById(String, ClarabridgeChatCallback)} to retrieve the full details of a conversation,
+     * or {@link #loadConversation(String, ClarabridgeChatCallback)} to make it active.
+     *
+     * @param callback An instance of {@link ClarabridgeChatCallback} to be notified of the result.
+     * @see #getConversationById(String, ClarabridgeChatCallback)
+     * @see #loadConversation(String, ClarabridgeChatCallback)
+     * @see #getConversation()
+     */
+    public static void getMoreConversationsList(@Nullable ClarabridgeChatCallback<List<Conversation>> callback) {
+        if (!isInitialized()) {
+            return;
+        }
+
+        callback = ensureNonNull(callback);
+
+        clarabridgeChatInternal.getMoreConversationsList(callback);
+    }
+
+    /**
+     * Accessor method for knowing if there are more conversations to be fetched or not.
+     *
+     * @return true if there is more conversations to be fetched or false if not.
+     */
+    public static boolean hasMoreConversations() {
+        return isInitialized() && clarabridgeChatInternal.hasMoreConversations();
     }
 
     /**
@@ -446,11 +556,11 @@ public final class ClarabridgeChat {
      * Sets the {@link ConversationDelegate}
      * <p>
      * This delegate will be notified before the delegate set using
-     * {@link #setConversationUiDelegate(ConversationDelegate)}
+     * {@link #addConversationUiDelegate(int, ConversationDelegate)}
      * <p>
      * Any delegate functions with the form boolean return type will prevent notification of conversationUiDelegate
      * <p>
-     * See {@link #setConversationUiDelegate(ConversationDelegate)}
+     * See {@link #addConversationUiDelegate(int, ConversationDelegate)}
      *
      * @param conversationDelegate an instance of {@link ConversationDelegate}
      */
@@ -474,7 +584,7 @@ public final class ClarabridgeChat {
     }
 
     /**
-     * Sets the {@link ConversationDelegate} used by the clarabridgeChat-ui package
+     * Add a {@link ConversationDelegate} used by the clarabridgeChat-ui package
      * <p>
      * The primary use of this property is to notify the ClarabridgeChat UI of changes in the Conversation
      * <p>
@@ -483,26 +593,31 @@ public final class ClarabridgeChat {
      * <p>
      * See {@link #setConversationDelegate(ConversationDelegate)}
      *
+     * @param key                    the key to use, must be >= 1
      * @param conversationUiDelegate an instance of {@link ConversationDelegate}
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public static void setConversationUiDelegate(@Nullable ConversationDelegate conversationUiDelegate) {
+    public static void addConversationUiDelegate(int key, @Nullable ConversationDelegate conversationUiDelegate) {
+        if (key < 1) {
+            return;
+        }
         if (conversationUiDelegate != null) {
-            ClarabridgeChat.conversationDelegates.put(ConversationDelegate.SDK_UI_DELEGATE, conversationUiDelegate);
+            ClarabridgeChat.conversationDelegates.put(key, conversationUiDelegate);
         } else {
-            ClarabridgeChat.conversationDelegates.remove(ConversationDelegate.SDK_UI_DELEGATE);
+            ClarabridgeChat.conversationDelegates.remove(key);
         }
     }
 
     /**
-     * Gets the delegate set via {@link #setConversationUiDelegate(ConversationDelegate)}.
+     * Gets a delegate set via {@link #addConversationUiDelegate(int key, ConversationDelegate)} using the key.
      *
-     * @return an instance of {@link ConversationDelegate} for the conversation UI
+     * @param key the key to use
+     * @return an instance of {@link ConversationDelegate}, null if not delegate for key
      */
     @Nullable
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public static ConversationDelegate getConversationUiDelegate() {
-        return ClarabridgeChat.conversationDelegates.get(ConversationDelegate.SDK_UI_DELEGATE);
+    public static ConversationDelegate getConversationUiDelegate(int key) {
+        return ClarabridgeChat.conversationDelegates.get(key);
     }
 
     /**

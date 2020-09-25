@@ -1,7 +1,7 @@
 package com.clarabridge.core;
 
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import java.util.Date;
 import java.util.List;
@@ -17,7 +17,7 @@ public interface ConversationDetails {
      *
      * @return the ID of this conversation, or null if a conversation wasn't started yet
      * @see Conversation#sendMessage(Message)
-     * @see ClarabridgeChat#startConversation(ClarabridgeChatCallback)
+     * @see ClarabridgeChat#createConversation(String, String, String, Map, ClarabridgeChatCallback)
      */
     @Nullable
     String getId();
@@ -31,12 +31,28 @@ public interface ConversationDetails {
     String getDisplayName();
 
     /**
+     * Returns the icon url of this conversation.
+     *
+     * @return the icon url of this conversation
+     */
+    @Nullable
+    String getIconUrl();
+
+    /**
+     * Returns the description of this conversation.
+     *
+     * @return the description of this conversation
+     */
+    @Nullable
+    String getDescription();
+
+    /**
      * Returns the date when the business last read the user's messages.
      *
      * @return the {@link Date} when the business last read the user's messages
      */
     @Nullable
-    Date getAppMakerLastRead();
+    Date getBusinessLastRead();
 
     /**
      * Returns the date when this conversation was last updated.

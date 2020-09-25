@@ -1,6 +1,6 @@
 package com.clarabridge.core;
 
-import android.support.annotation.Nullable;
+import androidx.annotation.Nullable;
 
 import com.clarabridge.core.utils.ValueEnum;
 import com.clarabridge.core.utils.ValueIndex;

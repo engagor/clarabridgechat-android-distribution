@@ -1,8 +1,9 @@
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="@color/ClarabridgeChat_conversationBackground">
 
-    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:clipChildren="true"
@@ -18,17 +19,17 @@
             android:id="@+id/ClarabridgeChat_serverBanner"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="#ff222222"
+            android:background="@color/ClarabridgeChat_errorSnackbarBackgroundColor"
             android:gravity="center_vertical|center_horizontal"
             android:lineSpacingMultiplier="@dimen/ClarabridgeChat_lineSpacingMultiplier"
-            android:paddingBottom="10dp"
             android:paddingTop="10dp"
+            android:paddingBottom="10dp"
             android:text="@string/ClarabridgeChat_errorCouldNotConnect"
             android:textColor="@color/ClarabridgeChat_header"
             android:textSize="@dimen/ClarabridgeChat_header"
             android:visibility="visible" />
 
-        <android.support.v7.widget.RecyclerView
+        <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/scrollView"
             android:layout_width="match_parent"
             android:layout_height="0dp"
@@ -41,6 +42,11 @@
             android:scrollingCache="false"
             android:transcriptMode="alwaysScroll" />
 
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@color/ClarabridgeChat_remoteMessageBackground"/>
+
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -49,10 +55,12 @@
 
             <com.clarabridge.ui.widget.BackEventEditText
                 android:id="@+id/ClarabridgeChat_inputText"
-                android:layout_height="wrap_content"
                 android:layout_width="match_parent"
+                android:layout_height="wrap_content"
                 android:layout_centerVertical="true"
+                android:layout_toStartOf="@+id/ClarabridgeChat_btnSend"
                 android:layout_toLeftOf="@+id/ClarabridgeChat_btnSend"
+                android:layout_toEndOf="@+id/ClarabridgeChat_btnMenu"
                 android:layout_toRightOf="@+id/ClarabridgeChat_btnMenu"
                 android:background="@null"
                 android:hint="@string/ClarabridgeChat_messageHint"
@@ -61,10 +69,10 @@
                 android:lines="@integer/ClarabridgeChat_settings_inputMaxLines"
                 android:maxLines="@integer/ClarabridgeChat_settings_inputMaxLines"
                 android:minLines="1"
-                android:paddingBottom="4dp"
                 android:paddingLeft="10dp"
-                android:paddingRight="10dp"
                 android:paddingTop="4dp"
+                android:paddingRight="10dp"
+                android:paddingBottom="4dp"
                 android:textColor="@color/ClarabridgeChat_inputTextColor"
                 android:textColorHint="@color/ClarabridgeChat_inputTextColorHint"
                 android:textSize="@dimen/ClarabridgeChat_inputTextSize" />
@@ -73,6 +81,7 @@
                 android:id="@+id/ClarabridgeChat_btnSend"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_alignParentEnd="true"
                 android:layout_alignParentRight="true"
                 android:layout_centerVertical="true"
                 android:background="@android:color/transparent"
@@ -84,18 +93,21 @@
                 android:id="@+id/ClarabridgeChat_btnMenu"
                 android:layout_width="@dimen/ClarabridgeChat_btnMenuSize"
                 android:layout_height="@dimen/ClarabridgeChat_btnMenuSize"
+                android:layout_alignParentStart="true"
                 android:layout_alignParentLeft="true"
                 android:layout_centerVertical="true"
+                android:layout_marginStart="10dp"
+                android:layout_marginLeft="10dp"
                 android:background="@android:color/transparent"
                 android:contentDescription="@string/ClarabridgeChat_btnMenu"
-                android:layout_marginLeft="10dp"
-                android:src="@drawable/clarabridgechat_btn_menu"
-                android:scaleType="fitXY"/>
+                android:scaleType="fitXY"
+                android:src="@drawable/clarabridgechat_btn_menu" />
 
             <View
                 android:id="@+id/ClarabridgeChat_btnSendHollow"
                 android:layout_width="0dp"
                 android:layout_height="0dp"
+                android:layout_alignStart="@+id/ClarabridgeChat_btnSend"
                 android:layout_alignLeft="@+id/ClarabridgeChat_btnSend"
                 android:layout_alignTop="@+id/ClarabridgeChat_btnSend"
                 android:background="@drawable/clarabridgechat_bg_send_hollow"
@@ -105,6 +117,7 @@
                 android:id="@+id/ClarabridgeChat_btnSendHollowBorder"
                 android:layout_width="0dp"
                 android:layout_height="0dp"
+                android:layout_alignStart="@+id/ClarabridgeChat_btnSend"
                 android:layout_alignLeft="@+id/ClarabridgeChat_btnSend"
                 android:layout_alignTop="@+id/ClarabridgeChat_btnSend"
                 android:background="@drawable/clarabridgechat_bg_send_hollow_border"
@@ -115,6 +128,6 @@
     <FrameLayout
         android:id="@+id/webview_fragment_container"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"/>
+        android:layout_height="match_parent" />
 </FrameLayout>
 
