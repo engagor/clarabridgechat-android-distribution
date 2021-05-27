@@ -34,3 +34,7 @@ This guide provides instructions on how to publish ClarabridgeChat as a library 
 
 ## Publish the API reference
 To distribute the documentation, host the files located at `build/docs/javadoc/` at your preferred URL.
+
+## Publish to S3 based maven repo
+    gradlew build publish -Ps3AccessKey=XXX -Ps3SecretKey=XXX
+

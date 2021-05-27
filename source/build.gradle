@@ -6,7 +6,7 @@ if (file("$rootDir/analysis/analysis.gradle").exists()) {
 buildscript {
     ext {
         versions = [
-                kotlin : "1.3.60"
+            kotlin: "1.3.60"
         ]
     }
     repositories {
@@ -25,9 +25,31 @@ buildscript {
 }
 
 subprojects {
+    apply plugin: "maven-publish"
+
     repositories {
         google()
         maven { url "https://maven.google.com" }
         jcenter()
+    }
+    publishing {
+        publications {
+            release(MavenPublication) {
+                groupId group
+                version version
+                artifactId project.name
+                artifact bundleReleaseAar
+
+            }
+        }
+        repositories {
+            maven {
+                url s3Bucket
+                credentials(AwsCredentials) {
+                    accessKey s3AccessKey
+                    secretKey s3SecretKey
+                }
+            }
+        }
     }
 }
