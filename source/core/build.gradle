@@ -1,7 +1,7 @@
 buildscript {
     repositories {
         google()
-        jcenter()
+        mavenCentral()
     }
     dependencies {
         classpath "com.github.dcendents:android-maven-gradle-plugin:2.1"
@@ -35,6 +35,7 @@ android {
         targetSdkVersion 29
         versionCode versionMajor * 10000 + versionMinor * 1000 + versionPatch * 100 + versionBuild
         versionName version
+        buildConfigField('String', 'VERSION_NAME',  "\"$version\"")
         buildConfigField("String", "VENDOR_ID", vendorId)
     }
 
@@ -113,7 +114,7 @@ dependencies {
 def classesFilename = "core-$version-classes.jar"
 
 task copyClassesJar(type: Copy) {
-    from("build/intermediates/intermediate-jars/release/")
+    from("build/intermediates/aar_main_jar/release/")
     into("build/libs/")
     include("classes.jar")
     rename("classes.jar", classesFilename)
