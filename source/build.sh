@@ -1,1 +1,1 @@
-./gradlew clean assemble install javadocJar
+./gradlew clean assemble install javadocJar publish
