@@ -109,6 +109,8 @@ You should now be able to import the libraries (`import com.clarabridge.core`, `
         });
 ```
 
+See the documentation for additional functionality https://engagor.github.io/clarabridgechat-android-distribution/.
+
 # Version
 
 This is version 2.0.0 of ClarabridgeChat. It corresponds to version [8.0.0](https://github.com/smooch/smooch-android/releases/tag/8.0.0) of the Smooch Android SDK.
