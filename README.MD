@@ -109,7 +109,7 @@ You should now be able to import the libraries (`import com.clarabridge.core`, `
         });
 ```
 
-See the documentation for additional functionality https://engagor.github.io/clarabridgechat-android-distribution/.
+See the documentation for additional functionality https://engagor.github.io/clarabridgechat-android-distribution/javadoc/index.html.
 
 # Version
 
